@@ -11,7 +11,7 @@
     <title>ትርፌ የሱቅ መቆጣጠሪያ አፕሊኬሽን - Ultimate v12.0</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -59,20 +59,9 @@
     <div id="loginPage" class="login-box hidden">
         <h2 id="loginTitle">ትርፌ አፕ (Tirfe App)</h2>
         <p id="loginDesc">የኪራይና የሱቅ መቆጣጠሪያ ማዕከላዊ ሲስተም</p>
-
-        <div style="background: rgba(56, 189, 248, 0.1); padding: 15px; border-radius: 8px; border: 1px solid var(--accent-color); margin-bottom: 15px;">
-            <p style="color: var(--accent-color); font-size: 0.85rem; margin-bottom: 8px; font-weight: bold;">🔐 ደህንነቱ የተጠበቀ መግቢያ (Magic Link)</p>
-            <input type="email" id="loginEmail" placeholder="የተመዘገበበትን ኢሜል አድራሻ ያስገቡ">
-            <button class="btn-sell btn-block" style="background-color: var(--accent-color); color: #000;" onclick="handleEmailLogin()">📧 የመግቢያ ሊንክ ላክልኝ</button>
-            <p id="loginSuccess" style="color: var(--success-color); margin-top: 10px; font-size: 0.85rem; font-weight: bold;"></p>
-        </div>
-
-        <p style="color: #94a3b8; font-size: 0.8rem; margin: 10px 0;">--- ወይም በነባሩ መንገድ ይግቡ ---</p>
-
         <input type="text" id="loginUser" placeholder="የተጠቃሚ ስም (Username)">
         <input type="password" id="loginPass" placeholder="የይለፍ ቃል / ጊዜያዊ ኮድ">
-        <button class="btn-sell btn-block" onclick="handleLogin()">🔒 በዩዘርኔም ግባ</button>
-  
+        <button class="btn-sell btn-block" onclick="handleLogin()">🔒 ደህንነቱ የተጠበቀ መግቢያ</button>
         <button class="btn-config btn-block" style="margin-top: 8px;" onclick="goToGateway()">⬅️ ወደ ኋላ ተመለስ</button>
         <p id="loginError" style="color: var(--danger-color); margin-top: 15px; font-size: 0.9rem; font-weight: bold;"></p>
     </div>
@@ -173,28 +162,24 @@
 
         <div class="section-box">
             <h2>👤 አዲስ ተከራይ መመዝገቢያ</h2>
-            
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <input type="text" id="newShopName" placeholder="የሱቅ ስም (ምሳሌ፡ አልፋ)">
                 <input type="text" id="newFullName" placeholder="የተከራይ ሙሉ ስም">
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <input type="text" id="newUsername" placeholder="መግቢያ ስም (Username)">
-                <input type="email" id="newEmail" placeholder="የኢሜል አድራሻ (ለ Magic Link)">
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <input type="text" id="newPhone" placeholder="ስልክ ቁጥር">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <input type="text" id="newTelegram" placeholder="የቴሌግራም መግቢያ (ምሳሌ፡ alpha_shop)">
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <input type="text" id="newMapsLink" placeholder="የሱቅ ጎግል ማፕ ሊንክ (Google Maps URL)">
-                <input type="text" id="newAddress" placeholder="ያለበት ሀገር / ከተማ / ክልል">
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" id="newAddress" placeholder="ያለበት ሀገር / ከተማ / ክልል">
                 <input type="text" id="newBusinessType" placeholder="የንግድ ዘርፍ (ምሳሌ፡ ኤሌክትሮኒክስ)">
-                <input type="number" id="newRegistrationFee" placeholder="የመመዝገቢያ ክፍያ (Registration Fee)">
             </div>
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px;">
+                <input type="number" id="newRegistrationFee" placeholder="የመመዝገቢያ ክፍያ (Registration Fee)">
                 <label style="font-size:0.85rem; color:var(--accent-color);">የሱቅ ፕሮፋይል ፎቶ ከጋላሪ ይምረጡ፡</label>
                 <input type="file" id="newShopLogoFile" accept="image/*">
             </div>
@@ -242,7 +227,6 @@
         </div>
 
         <div id="sessionDisplay" class="session-badge">የዕለቱ መፈላጊ መረጃ በመጠባበቅ ላይ...</div>
-        
         <div id="shiftStatusAlert" class="session-badge hidden" style="color:var(--danger-color); background:rgba(244,63,94,0.1); border-color:var(--danger-color); font-weight:bold; font-size: 1rem;">⚠️ ትኩረት፦ የዛሬው የስራ ሰዓት አብቅቷል። እባክዎ የዕለቱን ሂሳብ መዝጊያ ሪፖርት ያቅርቡ!</div>
 
         <div class="dashboard" id="ownerDashboard">
