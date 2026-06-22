@@ -218,6 +218,7 @@
             <div style="display:flex; gap:10px; margin-bottom: 20px; flex-wrap: wrap;">
                 <button class="btn-sell" onclick="toggleTenantListView()">👥 ተከራዮችን ዝርዝር እይ</button>
                 <button class="btn-config" style="background-color: #f59e0b; color: black;" onclick="openTariffSettings()">💰 የታሪፍ ሲቲንግ</button>
+                <button class="btn-draw" onclick="openVATSettings()">🧾 የቫት (VAT) ሲቲንግ</button>
                 <button class="btn-config" style="background-color: var(--accent-color); color: black;" onclick="openRevenueRegistrationModal()">🏛️ ገቢወች ምዝገባ</button>
             </div>
 
@@ -334,8 +335,20 @@
     <div id="revenuePage" class="hidden">
         <div class="welcome-header">
             <h1>🏛️ የገቢዎች ባለስልጣን ማዕከላዊ ሲስተም</h1>
-            <p style="color: var(--accent-color); margin-top: 10px;">ይህ ገፅ በሂደት ላይ ያለ አዲስ ሲስተም ነው። የራሱን ገፅ እና ተግባራት በቀጣይ የምንሰራው ይሆናል።</p>
-            <button class="btn-config" style="margin-top: 20px; width: 100%; max-width: 300px;" onclick="goToGateway()">⬅️ ወደ ዋናው መግቢያ ተመለስ</button>
+            <p id="revenueOfficerProfile" style="color: var(--accent-color); margin-top: 5px; font-weight: bold;"></p>
+            <button class="btn-expense" style="margin-top: 15px; width: 100%; max-width: 300px;" onclick="logout()">🚪 ከሲስተሙ ውጣ</button>
+        </div>
+        <div class="section-box" style="border-color: var(--success-color);">
+            <h2 style="color: var(--success-color);">📋 በእርስዎ ስር የተመደቡ ግብር ከፋዮች (ተከራዮች)</h2>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">በእርስዎ ምዝገባ ጊዜ ካስገቡት ክልል፣ ዞን እና ወረዳ ጋር አንድ አይነት መረጃ ያላቸው ተከራዮች ወደ እርስዎ ይላካሉ።</p>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr><th>የተከራይ ሙሉ ስም (የሱቅ ስም)</th><th>ስልክ ቁጥር</th><th>ክልል / ዞን / ወረዳ</th><th>ቀበሌ / የቤት ቁ.</th><th>TIN Number</th></tr>
+                    </thead>
+                    <tbody id="revenueTenantsBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -387,6 +400,10 @@
             <div class="card" style="border-left: 4px solid #f59e0b;">
                 <h3>የወር ኪራይ (Rent)</h3>
                 <p id="tenantRentDisplay" style="color: #f59e0b;">0.00</p>
+            </div>
+            <div class="card" style="border-left: 4px solid #ef4444;">
+                <h3>የቫት (VAT) መጠን</h3>
+                <p id="tenantVatDisplay" style="color: #ef4444;">0.00 ETB</p>
             </div>
         </div>
 
@@ -496,7 +513,7 @@
                     </thead>
                     <tbody id="receiptHistoryTableBody"></tbody>
                 </table>
-            </div>
+             </div>
         </div>
 
         <div class="grid-3">
@@ -515,7 +532,7 @@
                         <tbody id="drawBody"></tbody>
                     </table>
                 </div>
-            </div>
+             </div>
             <div class="section-box" id="historySection">
                 <h2>📅 የቀደሙ ቀናት ታሪክ እና ማህደር</h2>
                 <div style="margin-bottom:10px;">
