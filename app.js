@@ -30,7 +30,8 @@ function processImageUpload(file, callback) {
             let width = img.width; let height = img.height;
             if(width > height) { if(width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
             else { if(height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
-            canvas.width = width; canvas.height = height;
+            canvas.width = width;
+            canvas.height = height;
             let ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
             callback(canvas.toDataURL('image/jpeg', 0.6));
@@ -393,37 +394,110 @@ function handleUnifiedLogin() {
     err.innerText = "❌ መረጃው ስህተት ነው! አካውንት አልተገኘም።";
 }
 
-// የገቢዎች ዳሽቦርድ የሚሰራው (Matching logic)
+// 3. የገቢዎች ፕሮፋይል ዳታ ማስተካከያ ፈንክሽን
+window.saveRevenueProfileData = function() {
+    if(!currentRevenueOfficer) return;
+    let nName = document.getElementById('revOfficerName').value.trim();
+    let nEmail = document.getElementById('revOfficerEmail').value.trim();
+    let nPass = document.getElementById('revOfficerPassword').value.trim();
+
+    if(nName) currentRevenueOfficer.authName = nName;
+    if(nEmail) currentRevenueOfficer.authEmail = nEmail;
+    if(nPass) currentRevenueOfficer.authPass = nPass;
+
+    localDB.revenueAuthorities[currentRevenueOfficer.authUser] = currentRevenueOfficer;
+    pushToFirebase();
+    document.getElementById('revenueProfileSettingsCard').classList.add('hidden');
+    renderRevenuePanel();
+    showCustomAlert("ተሳክቷል", "የፕሮፋይል መረጃዎ (ስም፣ ኢሜል እና የይለፍ ቃል) በተሳካ ሁኔታ ተስተካክሏል!");
+};
+
+// 3. እና 5. የገቢዎች ዳሽቦርድ እና የቫት ክፍያ መሰብሰቢያ ሎጂክ
 function renderRevenuePanel() {
     if(!currentRevenueOfficer) return;
+
+    document.getElementById('revOfficerName').value = currentRevenueOfficer.authName || "";
+    document.getElementById('revOfficerEmail').value = currentRevenueOfficer.authEmail || "";
+    document.getElementById('revOfficerPassword').value = currentRevenueOfficer.authPass || "";
+
     document.getElementById('revenueOfficerProfile').innerText = `👤 ስም: ${currentRevenueOfficer.authName} | 📍 ምድብ: ${currentRevenueOfficer.authRegion} / ${currentRevenueOfficer.authZone} / ${currentRevenueOfficer.authWoreda}`;
+
+    let mSum = currentRevenueOfficer.monthlyVat || 0;
+    let aSum = currentRevenueOfficer.annualVat || 0;
+    document.getElementById('revenueMonthlyVatSum').innerText = mSum.toFixed(2) + " ETB";
+    document.getElementById('revenueAnnualVatSum').innerText = aSum.toFixed(2) + " ETB";
 
     let tbody = document.getElementById('revenueTenantsBody');
     tbody.innerHTML = '';
     let count = 0;
-
     if(localDB.tenants) {
         Object.values(localDB.tenants).forEach(t => {
-            // ማናበቢያ፡ ተከራዩ የሞላው ክልል፣ ዞን እና ወረዳ ከገቢዎች ሰራተኛው ጋር አንድ አይነት መሆን አለበት
             if(t.region === currentRevenueOfficer.authRegion &&
                t.zone === currentRevenueOfficer.authZone &&
                t.woreda === currentRevenueOfficer.authWoreda) {
+            
                 count++;
+                let accumulatedVat = (t.data && t.data.accumulatedVat) ? parseFloat(t.data.accumulatedVat) : 0;
+                
                 tbody.innerHTML += `<tr>
                     <td><b>${t.fullName}</b><br><small style="color:var(--accent-color)">${t.shopName}</small></td>
                     <td>📞 ${t.phone}</td>
                     <td>${t.region} / ${t.zone} / ${t.woreda}</td>
                     <td>${t.kebele} / ${t.houseNo}</td>
                     <td style="color:var(--warning-color); font-weight:bold;">${t.tinNumber}</td>
+                    <td style="color:var(--warning-color); font-weight:bold;">${accumulatedVat.toFixed(2)} ETB</td>
+                    <td><button class="btn-success btn-sm" onclick="payTenantVat('${t.username}')">ክፈል (Pay)</button></td>
                 </tr>`;
             }
         });
     }
     
     if(count === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">በእርስዎ ምድብ የተመዘገበ ግብር ከፋይ (ተከራይ) እስካሁን የለም።</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#94a3b8;">በእርስዎ ምድብ የተመዘገበ ግብር ከፋይ (ተከራይ) እስካሁን የለም።</td></tr>`;
     }
 }
+
+// የቫት ክፍያ መሰብሰቢያ ሎጂክ
+window.payTenantVat = function(username) {
+    let t = localDB.tenants[username];
+    if(!t || !t.data) return;
+    let vatToPay = parseFloat(t.data.accumulatedVat) || 0;
+    
+    if(vatToPay <= 0) {
+        showCustomAlert("ማሳሰቢያ", "ይህ ነጋዴ የሚከፍለው የተሰበሰበ የቫት መጠን የለበትም (0.00 ETB)።");
+        return;
+    }
+    
+    showCustomConfirm("ክፍያ ማረጋገጫ", `ከ ${t.fullName} (${t.shopName}) የተሰበሰበውን የቫት መጠን ${vatToPay.toFixed(2)} ETB መቀበልዎን እርግጠኛ ኖት?`, () => {
+        if(!currentRevenueOfficer.monthlyVat) currentRevenueOfficer.monthlyVat = 0;
+        if(!currentRevenueOfficer.annualVat) currentRevenueOfficer.annualVat = 0;
+
+        currentRevenueOfficer.monthlyVat += vatToPay;
+        currentRevenueOfficer.annualVat += vatToPay;
+        localDB.revenueAuthorities[currentRevenueOfficer.authUser] = currentRevenueOfficer;
+
+        t.data.accumulatedVat = 0;
+        localDB.tenants[username] = t;
+
+        pushToFirebase();
+        renderRevenuePanel();
+        showCustomAlert("ተሳክቷል", "ክፍያው በተሳካ ሁኔታ ተሰብስቧል! የነጋዴው የተሰበሰበ ቫት 0.00 ሆኗል።");
+    });
+};
+
+// 5. የአመቱን በጀት መዝጊያ
+window.closeRevenueBudgetAnnual = function() {
+    showCustomConfirm("በጀት መዝጊያ", "በእርግጥ የአመቱን በጀት መዝጋት ይፈልጋሉ? ይህ ድርጊት የወሩን እና የአመቱን የቫት ድምር ወደ 0.00 ይመልሰዋል።", () => {
+        if(currentRevenueOfficer) {
+            currentRevenueOfficer.monthlyVat = 0;
+            currentRevenueOfficer.annualVat = 0;
+            localDB.revenueAuthorities[currentRevenueOfficer.authUser] = currentRevenueOfficer;
+            pushToFirebase();
+            renderRevenuePanel();
+            showCustomAlert("በጀት ተዘግቷል", "የአመቱ የቫት በጀት በተሳካ ሁኔታ ተዘግቶ ወደ 0.00 ተመልሷል።");
+        }
+    });
+};
 
 function triggerUnifiedRegistration() {
     let role = document.getElementById('unifiedRegRole').value;
@@ -469,8 +543,6 @@ function triggerUnifiedRegistration() {
         let phone = document.getElementById('pub_newPhone').value.trim();
         let newEmail = document.getElementById('pub_newEmail').value.trim();
         let telegram = document.getElementById('pub_newTelegram').value.trim();
-        
-        // አዳዲሶቹ አስገዳጅ ፊልዶች
         let region = document.getElementById('pub_newRegion').value.trim();
         let zone = document.getElementById('pub_newZone').value.trim();
         let woreda = document.getElementById('pub_newWoreda').value.trim();
@@ -478,7 +550,6 @@ function triggerUnifiedRegistration() {
         let houseNo = document.getElementById('pub_newHouseNo').value.trim();
         let tinNum = document.getElementById('pub_newTin').value.trim();
         let tradeReg = document.getElementById('pub_newTradeReg').value.trim();
-        
         let mapsLink = document.getElementById('pub_newMapsLink').value.trim();
         let address = document.getElementById('pub_newAddress').value.trim();
         let businessType = document.getElementById('pub_newBusinessType').value.trim() || 'አጠቃላይ ንግድ';
@@ -514,7 +585,7 @@ function triggerUnifiedRegistration() {
                         username: user, password: res.newPass, activationCode: res.newPass, codeCreatedAt: timestampNow,
                         isActivated: true, contractType: contractType, expiryDate: expiryDate, registrationFee: registrationFee,
                         status: "active", theme: "theme-deepblue", staffAccounts: [],
-                        data: { sessionActive: false, shiftClosed: false, inventory: [], expenses: [], debts: [], drawerLog: [], history: [], receipts: [], deliveryOrders: [], remoteCarts: {}, lastMonthlyResetDate: timestampNow } 
+                        data: { sessionActive: false, shiftClosed: false, inventory: [], expenses: [], debts: [], drawerLog: [], history: [], receipts: [], deliveryOrders: [], remoteCarts: {}, accumulatedVat: 0, lastMonthlyResetDate: timestampNow } 
                     };
                     pushToFirebase();
                     
@@ -653,7 +724,6 @@ window.openBuyerProfileSettings = function() {
         currentBuyer.name = res.b_name.trim();
         currentBuyer.username = newU;
         currentBuyer.email = res.b_email.trim(); currentBuyer.phone = newP; currentBuyer.password = res.b_password.trim();
-        
         if(oldU !== newU) {
             localDB.buyers[newU] = currentBuyer; delete localDB.buyers[oldU];
             localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'buyer', loginMode: 'buyer', username: newU }));
@@ -692,7 +762,6 @@ function checkMonthlyAccessReset() {
     
     let diffTime = Math.abs(currentTimestamp - currentTenant.data.lastMonthlyResetDate);
     let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
     if (diffDays >= 30) {
         let d = currentTenant.data;
         let expensesList = d.expenses || []; let totalMonthlyExp = 0;
@@ -721,6 +790,70 @@ function checkMonthlyAccessReset() {
     }
 }
 
+// 6. የቫት ደረሰኝ ማሳያ ቶግል (Toggle)
+window.toggleVatReceiptPanel = function() {
+    let panel = document.getElementById('tenantVatReceiptSection');
+    if(panel) {
+        panel.classList.toggle('hidden');
+        document.getElementById('vatCurrentDateSpan').innerText = getTodayFormatted();
+    }
+};
+
+// 4. እና 6. የተለየ የቫት ደረሰኝ ማመንጨት ተግባር
+window.generateStandaloneVatReceipt = function() {
+    if(!currentTenant) return;
+    let cName = document.getElementById('specialVatCustomerName').value.trim() || "የተከበረ ደንበኛ";
+    let cTin = document.getElementById('specialVatCustomerTin').value.trim() || "-";
+    let iName = document.getElementById('specialVatItemName').value.trim() || "የተለያዩ ዕቃዎች";
+    let iQty = parseFloat(document.getElementById('specialVatItemQty').value) || 1;
+    let iPrice = parseFloat(document.getElementById('specialVatItemPrice').value) || 0;
+    let vPercent = parseFloat(document.getElementById('specialVatPercent').value) || 15;
+
+    if(iPrice <= 0) {
+        showCustomAlert("ስህተት", "እባክዎ ትክክለኛ የዕቃ ዋጋ ያስገቡ!"); 
+        return;
+    }
+
+    let subTotal = iPrice * iQty;
+    let vatAmount = (subTotal * vPercent) / 100;
+    let grandTotal = subTotal + vatAmount;
+    let recId = Math.floor(100000 + Math.random() * 900000);
+
+    // ሞዳሉን መሙላት
+    document.getElementById('recPrintShopName').innerText = currentTenant.shopName;
+    document.getElementById('recPrintFullName').innerText = currentTenant.fullName;
+    document.getElementById('recPrintBizType').innerText = currentTenant.businessType || "አጠቃላይ ንግድ";
+    document.getElementById('recPrintTin').innerText = currentTenant.tinNumber || "-";
+    document.getElementById('recPrintTradeReg').innerText = currentTenant.tradeRegistration || "-";
+    document.getElementById('recPrintPhone').innerText = currentTenant.phone || "-";
+    document.getElementById('recPrintEmail').innerText = currentTenant.gmail || "-";
+    document.getElementById('recPrintRegion').innerText = currentTenant.region || "-";
+    document.getElementById('recPrintZone').innerText = currentTenant.zone || "-";
+    document.getElementById('recPrintWoreda').innerText = currentTenant.woreda || "-";
+    document.getElementById('recPrintKebele').innerText = currentTenant.kebele || "-";
+    document.getElementById('recPrintHouseNo').innerText = currentTenant.houseNo || "-";
+
+    document.getElementById('recPrintCustomerName').innerText = cName;
+    document.getElementById('recPrintCustomerTin').innerText = cTin;
+    document.getElementById('recPrintDate').innerText = getTodayFormatted();
+    document.getElementById('recPrintReceiptId').innerText = "#" + recId;
+
+    let tbody = document.getElementById('recPrintItemsBody');
+    tbody.innerHTML = `<tr>
+        <td style="padding: 4px 0; border-bottom: 1px dashed #ccc;">${iName}</td>
+        <td style="padding: 4px 0; text-align: center; border-bottom: 1px dashed #ccc;">${iQty}</td>
+        <td style="padding: 4px 0; text-align: right; border-bottom: 1px dashed #ccc;">${iPrice.toFixed(2)}</td>
+        <td style="padding: 4px 0; text-align: right; border-bottom: 1px dashed #ccc;">${subTotal.toFixed(2)}</td>
+    </tr>`;
+
+    document.getElementById('recPrintSubTotal').innerText = subTotal.toFixed(2);
+    document.getElementById('recPrintVatPercent').innerText = vPercent;
+    document.getElementById('recPrintVatAmount').innerText = vatAmount.toFixed(2);
+    document.getElementById('recPrintGrandTotal').innerText = grandTotal.toFixed(2);
+
+    document.getElementById('specialVatReceiptModal').classList.remove('hidden');
+};
+
 function launchApp(tenant) {
     currentTenant = tenant;
     switchView('appPage');
@@ -732,7 +865,6 @@ function launchApp(tenant) {
     let rentDisplay = document.getElementById('tenantRentDisplay');
     if(rentDisplay) { rentDisplay.innerText = (tenant.registrationFee || 0) + " ETB"; }
 
-    // አዲሱ የቫት ማሳያ (VAT Display)
     let vatRate = (localDB.adminSettings && localDB.adminSettings.vatRate) ? parseFloat(localDB.adminSettings.vatRate) : 0;
     let rentAmount = parseFloat(tenant.registrationFee) || 0;
     let calculatedVat = (rentAmount * vatRate) / 100;
@@ -825,7 +957,6 @@ window.saveAllStaff = function() {
         tempStaffForms[i].phone = document.getElementById(`s_phone_${i}`).value.trim();
         tempStaffForms[i].user = document.getElementById(`s_user_${i}`).value.trim().toLowerCase();
         tempStaffForms[i].pass = document.getElementById(`s_pass_${i}`).value.trim();
-        
         if(!tempStaffForms[i].name || !tempStaffForms[i].phone || !tempStaffForms[i].user || !tempStaffForms[i].pass) {
             showCustomAlert("ስህተት", `እባክዎ ለሰራተኛ ${i+1} አስፈላጊ መረጃዎችን ይሙሉ!`);
             return;
@@ -852,7 +983,8 @@ window.openDeliveryOrderModal = function(shopKey, itemIdx, itemName, price) {
         { id: "address", label: "ያሉበት ትክክለኛ አድራሻ / ሰፈር", type: "text", placeholder: "ምሳሌ: ቦሌ ሚካኤል፣ ህንፃ 3..." },
         { id: "mapLink", label: "የጎግል ማፕ ሊንክ (አማራጭ)", type: "text", placeholder: "https://maps.google.com/..." },
         { id: "qty", label: "የሚፈልጉት ብዛት", type: "number", defaultValue: "1" }
-    ], (res) => {
+    ], 
+    (res) => {
         let qty = parseFloat(res.qty) || 0;
         if(qty <= 0 || !res.address) { showCustomAlert("ስህተት", "እባክዎ አድራሻዎን እና የሚፈልጉትን ብዛት በትክክል ይሙሉ!"); return; }
 
@@ -1137,7 +1269,6 @@ function registerTenant() {
     let phone = document.getElementById('newPhone').value.trim();
     let newEmail = document.getElementById('newEmail').value.trim();
     let telegram = document.getElementById('newTelegram').value.trim();
-    
     let region = document.getElementById('newRegion').value.trim();
     let zone = document.getElementById('newZone').value.trim();
     let woreda = document.getElementById('newWoreda').value.trim();
@@ -1145,7 +1276,6 @@ function registerTenant() {
     let houseNo = document.getElementById('newHouseNo').value.trim();
     let tinNum = document.getElementById('newTin').value.trim();
     let tradeReg = document.getElementById('newTradeReg').value.trim();
-    
     let mapsLink = document.getElementById('newMapsLink').value.trim();
     let address = document.getElementById('newAddress').value.trim();
     let businessType = document.getElementById('newBusinessType').value.trim() || 'አጠቃላይ ንግድ';
@@ -1154,8 +1284,7 @@ function registerTenant() {
     let expiryDate = document.getElementById('newExpiryDate').value;
     
     if(!shop || !user || !expiryDate || !fullName || !phone || !newEmail || !region || !zone || !woreda || !kebele || !houseNo || !tinNum || !tradeReg) { 
-        showCustomAlert("ስህተት", "እባክዎ መሠረታዊ እና አስገዳጅ መረጃዎችን ሙሉ በሙሉ ያሟሉ!");
-        return; 
+        showCustomAlert("ስህተት", "እባክዎ መሠረታዊ እና አስገዳጅ መረጃዎችን ሙሉ በሙሉ ያሟሉ!"); return; 
     }
 
     let checkUser = isSystemDataTaken(user, phone, "", "");
@@ -1177,7 +1306,7 @@ function registerTenant() {
                 username: user, password: genCode, activationCode: genCode, codeCreatedAt: timestampNow,
                 isActivated: false, contractType: contractType, expiryDate: expiryDate, registrationFee: registrationFee,
                 status: "active", theme: "theme-deepblue", staffAccounts: [],
-                data: { sessionActive: false, shiftClosed: false, inventory: [], expenses: [], debts: [], drawerLog: [], history: [], receipts: [], deliveryOrders: [], remoteCarts: {}, lastMonthlyResetDate: timestampNow } 
+                data: { sessionActive: false, shiftClosed: false, inventory: [], expenses: [], debts: [], drawerLog: [], history: [], receipts: [], deliveryOrders: [], remoteCarts: {}, accumulatedVat: 0, lastMonthlyResetDate: timestampNow } 
             };
             pushToFirebase(); renderAdminPanel();
             
@@ -1191,7 +1320,8 @@ function registerTenant() {
             
             document.getElementById('newRegion').value = ''; document.getElementById('newZone').value = '';
             document.getElementById('newWoreda').value = ''; document.getElementById('newKebele').value = '';
-            document.getElementById('newHouseNo').value = ''; document.getElementById('newTin').value = '';
+            document.getElementById('newHouseNo').value = '';
+            document.getElementById('newTin').value = '';
             document.getElementById('newTradeReg').value = '';
             
             showCustomAlert("ተሳክቷል", "አዲሱ ተከራይ በተሳካ ሁኔታ ተመዝግቧል! መግቢያ ኮዳቸው: " + genCode + " ነው::");
@@ -1295,7 +1425,6 @@ function renderAdminPanel() {
     let totalTenants = 0; let activeTenants = 0;
     let totalFeesCollected = 0; let alertsHTML = '';
     let needsPush = false;
-    
     Object.keys(localDB.tenants).forEach(key => {
         let t = localDB.tenants[key]; totalTenants++;
         if (t.status === "active") activeTenants++;
@@ -1308,14 +1437,10 @@ function renderAdminPanel() {
                 
                 if(!t.expiryNotified) {
                     sendAdminTelegramAlert(`⚠️ የውል ማብቂያ ማሳወቂያ!\n\nየተከራይ ውል ሊያልቅ ${diff} ቀን ብቻ ቀርቶታል!\n\n👤 ስም: ${t.fullName}\n🔑 ዩዘርኔም: ${t.username}\n📞 ስልክ: ${t.phone}\n✈️ ቴሌግራም: ${t.telegram || "አልገባም"}`);
-                    t.expiryNotified = true;
-                    localDB.tenants[key] = t;
-                    needsPush = true;
+                    t.expiryNotified = true; localDB.tenants[key] = t; needsPush = true;
                 }
             } else if (diff > 5 && t.expiryNotified) {
-                t.expiryNotified = false;
-                localDB.tenants[key] = t;
-                needsPush = true;
+                t.expiryNotified = false; localDB.tenants[key] = t; needsPush = true;
             }
         }
 
@@ -1330,7 +1455,6 @@ function renderAdminPanel() {
         let loginInfo = `👤 አባል ስም: <code>${t.username}</code><br>${codeDisplay}<br>🛠️ ሰራተኛ: <code>${staffCnt} የተመዘገቡ</code>`;
         let contractDisplay = `<span>${t.contractType || 'በወር'}</span><br><b class="text-warning">${t.registrationFee || 0} ETB</b>`;
         let bType = t.businessType || 'አጠቃላይ ንግድ';
-        
         tbody.innerHTML += `<tr>
             <td><b>${t.shopName}</b><br><span style="color:var(--accent-color); font-size:0.8rem;">[${bType}]</span></td>
             <td>${profileInfo}</td><td>${loginInfo}</td><td>${contractDisplay}</td>
@@ -1545,7 +1669,6 @@ function triggerShiftReport() {
     let d = currentTenant.data || {}; let session = d.sessionData || {};
     let sysSales = parseFloat(d.collectedCreditToday || 0); let todayProfit = 0; let inv = d.inventory || [];
     inv.forEach(item => { sysSales += (item.price * item.sold); todayProfit += (item.price - item.cost) * item.sold; });
-    
     showFormModal("🔒 የዕለት ሂሳብ ሪፖርት መዝጊያ ማቅረቢያ", [
         { id: "reportedCash", label: "በእጅዎ የሚገኘውን ትክክለኛ የጥሬ ገንዘብ (Cash) መጠን ያስገቡ፦", type: "number", placeholder: "0.00" }
     ], (res) => {
@@ -1588,7 +1711,7 @@ function startNewDaySession() {
 function clearAllTenantData() {
     if(currentUserRole === "staff") return;
     showCustomConfirm("ሁሉንም ዳታ ማጽዳት", "ሁሉንም ዳታ ለማጥፋት እርግጠኛ ኖት?", () => {
-        currentTenant.data = { sessionActive: false, shiftClosed: false, inventory: [], expenses: [], debts: [], drawerLog: [], history: [], receipts: [], deliveryOrders: [], remoteCarts: {}, lastMonthlyResetDate: new Date().getTime() };
+        currentTenant.data = { sessionActive: false, shiftClosed: false, inventory: [], expenses: [], debts: [], drawerLog: [], history: [], receipts: [], deliveryOrders: [], remoteCarts: {}, accumulatedVat: 0, lastMonthlyResetDate: new Date().getTime() };
         saveAndRefresh(); checkMorningSession();
     });
 }
@@ -1612,6 +1735,7 @@ function renderHistoryTable() {
     }
 }
 
+// 1. እና 2. ዴሊቨሪ ሲያልቅ የቫት ድምር እንዲያዝ ተደርጓል
 window.acceptDelivery = function(idx) {
     let ord = currentTenant.data.deliveryOrders[idx]; let item = currentTenant.data.inventory[ord.itemIdx];
     let neededMeters = item.isAdvanced && item.unitType !== 'kg' ? ord.qty * item.unitPerPack : ord.qty;
@@ -1623,12 +1747,21 @@ window.completeDelivery = function(idx) {
     let ord = currentTenant.data.deliveryOrders[idx]; let item = currentTenant.data.inventory[ord.itemIdx];
     let neededMeters = item.isAdvanced && item.unitType !== 'kg' ? ord.qty * item.unitPerPack : ord.qty;
     item.sold += neededMeters; ord.status = "completed";
+
+    let vatRate = (localDB.adminSettings && localDB.adminSettings.vatRate) ? parseFloat(localDB.adminSettings.vatRate) : 0;
+    if(vatRate > 0) {
+        let collectedVat = (ord.total * vatRate) / 100;
+        if(!currentTenant.data.accumulatedVat) currentTenant.data.accumulatedVat = 0;
+        currentTenant.data.accumulatedVat += collectedVat;
+    }
+
     generateDigitalReceipt(ord.itemName, ord.qty, ord.total, ord.orderId, null, true, ord.buyerUser, ord.buyerPhone);
     saveAndRefresh();
 };
 
 window.returnDelivery = function(idx) { let ord = currentTenant.data.deliveryOrders[idx]; ord.status = "returned"; saveAndRefresh(); showCustomAlert("ተመልሷል", "እቃው ተመልሷል!"); };
 
+// 1. እና 2. ኦንላይን ሲሸጥ የቫት ድምር እንዲያዝ ተደርጓል
 window.handleRemoteCartCheckout = function(buyerUser) {
     let t = currentTenant.data;
     let remoteCart = t.remoteCarts[buyerUser];
@@ -1644,6 +1777,14 @@ window.handleRemoteCartCheckout = function(buyerUser) {
         delete t.remoteCarts[buyerUser];
         let currentSeller = currentUserRole === 'staff' ? 'ሰራተኛ (Employee)' : 'ባለቤት (Employer)';
         let bPhone = localDB.buyers[buyerUser] ? localDB.buyers[buyerUser].phone : "";
+
+        let vatRate = (localDB.adminSettings && localDB.adminSettings.vatRate) ? parseFloat(localDB.adminSettings.vatRate) : 0;
+        if(vatRate > 0) {
+            let collectedVat = (grandTotal * vatRate) / 100;
+            if(!currentTenant.data.accumulatedVat) currentTenant.data.accumulatedVat = 0;
+            currentTenant.data.accumulatedVat += collectedVat;
+        }
+
         generateAdvancedReceipt(receiptItems, grandTotal, currentSeller, null, true, null, null, buyerUser, bPhone);
         saveAndRefresh();
         sendTelegramAlert(`🛍️ የኦንላይን ሽያጭ (Remote Cart Checkout)፦\nየገዢ ስም: ${buyerUser}\nጠቅላላ ሂሳብ፡ ${grandTotal} ETB`);
@@ -1720,6 +1861,13 @@ function renderApp() {
     document.getElementById('totalInCash').innerText = finalCashInHand.toFixed(1) + " ETB";
     let sellerTotalBuyersEl = document.getElementById('sellerTotalBuyers');
     if(sellerTotalBuyersEl) sellerTotalBuyersEl.innerText = localDB.buyers ? Object.keys(localDB.buyers).length : 0;
+    
+    // 2. የተከራይ ጠቅላላ ቫት ማሳያ
+    let accVatDisplay = document.getElementById('tenantAccumulatedVatDisplay');
+    if(accVatDisplay) {
+        let accVat = (d.accumulatedVat) ? parseFloat(d.accumulatedVat) : 0;
+        accVatDisplay.innerText = accVat.toFixed(2) + " ETB";
+    }
 
     if (currentUserRole === "owner") {
         let monthlyProfit = todayProfit - todayExpensesTotal;
@@ -1937,8 +2085,11 @@ function showCustomConfirm(title, message, onConfirm) {
     document.getElementById('confirmYesBtn').onclick = function() { closeActiveModal(); if(onConfirm) onConfirm(); };
 }
 
-function changeTheme(themeClass) { document.body.className = themeClass; if(currentTenant) { currentTenant.theme = themeClass; saveAndRefresh(); } }
-function deleteInventoryItem(idx) { if(currentUserRole === "staff") return; showCustomConfirm("እቃ መሰረዣ", "ይህንን እቃ ማጥፋት ይፈልጋሉ?", () => { currentTenant.data.inventory.splice(idx, 1); saveAndRefresh(); }); }
+function changeTheme(themeClass) { document.body.className = themeClass;
+    if(currentTenant) { currentTenant.theme = themeClass; saveAndRefresh(); } }
+function deleteInventoryItem(idx) { if(currentUserRole === "staff") return;
+    showCustomConfirm("እቃ መሰረዣ", "ይህንን እቃ ማጥፋት ይፈልጋሉ?", () => { currentTenant.data.inventory.splice(idx, 1); saveAndRefresh(); });
+}
 
 function downloadReceiptPDF(filename) {
     const element = document.getElementById('printableReceiptArea');
@@ -2058,6 +2209,7 @@ window.renderMainCart = function() {
 
 window.removeMainCartItem = function(i) { mainCart.splice(i, 1); renderMainCart(); };
 
+// 1. እና 2. የሽያጭ ደረሰኝ ሲቆረጥ ቫት እንዲደመር ተደርጓል
 window.checkoutMainCart = function() {
     if(!mainCart || mainCart.length === 0) { showCustomAlert("ስህተት", "እባክዎ መጀመሪያ ከቴብሉ እቃ ወደ ቅርጫቱ ያስገቡ!"); return; }
     
@@ -2067,6 +2219,14 @@ window.checkoutMainCart = function() {
         let item = currentTenant.data.inventory[c.index]; item.sold += c.deductedMeters; grandTotal += c.total;
         receiptItems.push({ name: c.name, count: c.qty, unitPrice: c.price, total: c.total });
     });
+
+    let vatRate = (localDB.adminSettings && localDB.adminSettings.vatRate) ? parseFloat(localDB.adminSettings.vatRate) : 0;
+    if(vatRate > 0) {
+        let collectedVat = (grandTotal * vatRate) / 100;
+        if(!currentTenant.data.accumulatedVat) currentTenant.data.accumulatedVat = 0;
+        currentTenant.data.accumulatedVat += collectedVat;
+    }
+
     sendTelegramAlert(`🛍️ የሽያጭ ማስታወቂያ (${currentSeller})፦\nየሱቅ ስም: ${currentTenant.shopName}\nየተሸጡ ዕቃዎች፡ ${receiptItems.length} አይነት\nጠቅላላ ሂሳብ፡ ${grandTotal} ETB`);
     mainCart = []; saveAndRefresh(); renderMainCart(); generateAdvancedReceipt(receiptItems, grandTotal, currentSeller);
 };
