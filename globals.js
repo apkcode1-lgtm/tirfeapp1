@@ -18,4 +18,3 @@ function setCategoryFilter(cat) {
     activeCategoryFilter = cat;
     renderBuyerCatalog();
 }
-
