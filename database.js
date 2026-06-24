@@ -94,4 +94,3 @@ if(typeof db !== 'undefined') {
         handleOnlineStatus();
     });
 }
-
