@@ -18,7 +18,6 @@ function processImageUpload(file, callback) {
     };
     reader.readAsDataURL(file);
 }
-
 function viewImageFullscreen(src) {
     if(!src) return;
     let modal = document.getElementById('imageLightbox');
@@ -60,7 +59,6 @@ function closeActiveModal() {
     document.getElementById('modalOverlay').classList.add('hidden'); 
     document.querySelectorAll('.modal-card').forEach(m => m.classList.add('hidden')); 
 }
-
 function showCustomAlert(title, message, callback) {
     document.getElementById('alertTitle').innerText = title;
     document.getElementById('alertMessage').innerText = message;
@@ -123,7 +121,6 @@ function showCustomConfirm(title, message, onConfirm) {
     openModalContainer(); document.getElementById('confirmModal').classList.remove('hidden');
     document.getElementById('confirmYesBtn').onclick = function() { closeActiveModal(); if(onConfirm) onConfirm(); };
 }
-
 function changeTheme(themeClass) { 
     document.body.className = themeClass;
     if(typeof currentTenant !== 'undefined' && currentTenant) { 
@@ -164,4 +161,3 @@ function moveToPrev(e, current, prevFieldID) {
         }
     }
 }
-
