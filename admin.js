@@ -138,7 +138,7 @@ function openAdminTenantEditor(user) {
 window.toggleAdminBuyersView = function() {
     let main = document.getElementById('adminDashboardMain'); let section = document.getElementById('adminBuyersSection');
     if(main && section) { main.classList.toggle('hidden');
-    section.classList.toggle('hidden'); renderAdminBuyers(); }
+        section.classList.toggle('hidden'); renderAdminBuyers(); }
 };
 
 window.toggleTenantListView = function() {
@@ -169,24 +169,31 @@ window.openRevenueRegistrationModal = function() {
         { id: "revWoreda", label: "ወረዳ", type: "text" }
     ], (res) => {
         let user = res.revUser.trim().toLowerCase();
-        if(!user || !res.revPass || !res.revName) { showCustomAlert("ስህተት", "እባክዎ መሠረታዊ መረጃዎችን ይሙሉ!"); return; }
+        if(!user || !res.revPass || !res.revName || !res.revRegion || !res.revZone || !res.revWoreda) { 
+            showCustomAlert("ስህተት", "እባክዎ መሠረታዊ መረጃዎችን ይሙሉ!"); return; 
+        }
 
         if(!localDB.revenueAuthorities) localDB.revenueAuthorities = {};
+ 
         if(localDB.revenueAuthorities[user]) { showCustomAlert("ስህተት", "ይህ ዩዘርኔም አስቀድሞ ተይዟል!"); return; }
 
+        // Data structure explicitly matched to work flawlessly with login and lists
         localDB.revenueAuthorities[user] = {
             username: user,
+            authUser: user,
             authName: res.revName,
             authPhone: res.revPhone,
             authEmail: res.revEmail,
             authPass: res.revPass,
-            region: res.revRegion,
-            zone: res.revZone,
-            woreda: res.revWoreda,
+            authRegion: res.revRegion,
+            authZone: res.revZone,
+            authWoreda: res.revWoreda,
             status: "active"
         };
+        
         pushToFirebase();
         showCustomAlert("✅ ተሳክቷል", "የገቢዎች ባለስልጣን አካውንት በተሳካ ሁኔታ ተመዝግቧል!");
+        
         if(document.getElementById('adminRevenueSection') && !document.getElementById('adminRevenueSection').classList.contains('hidden')){
             renderAdminRevenueList();
         }
@@ -205,7 +212,7 @@ window.renderAdminRevenueList = function() {
         let r = localDB.revenueAuthorities[key];
         let rName = r.authName || '-';
         let rContact = `📞 ${r.authPhone || '-'}<br>📧 ${r.authEmail || '-'}`;
-        let rRegion = `${r.region || '-'}/${r.zone || '-'}/${r.woreda || '-'}`;
+        let rRegion = `${r.authRegion || '-'}/${r.authZone || '-'}/${r.authWoreda || '-'}`;
 
         tbody.innerHTML += `<tr>
             <td>👤 <b>${rName}</b><br><code>${key}</code></td>
@@ -216,7 +223,7 @@ window.renderAdminRevenueList = function() {
             </td>
         </tr>`;
     });
-
+    
     if(!hasData) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">ምንም የተመዘገበ የገቢዎች ባለስልጣን የለም።</td></tr>`;
     }
@@ -243,6 +250,7 @@ function renderAdminPanel() {
     let query = document.getElementById('adminSearchInput') ? document.getElementById('adminSearchInput').value.trim().toLowerCase() : "";
     let totalTenants = 0; let activeTenants = 0;
     let totalFeesCollected = 0; let alertsHTML = ''; let needsPush = false;
+    
     Object.keys(localDB.tenants).forEach(key => {
         let t = localDB.tenants[key]; totalTenants++;
         if (t.status === "active") activeTenants++;
@@ -263,9 +271,11 @@ function renderAdminPanel() {
         }
 
         if (query !== "" && !t.username.toLowerCase().includes(query)) return;
+        
         let statusBadge = t.status === "active" ? `<span class="badge-success">Active</span>` : `<span class="badge-danger">Blocked</span>`;
         let profileInfo = `👤 <b>${t.fullName || '-'}</b><br>📞 ${t.phone || '-'}<br>📍 ${t.address || '-'}<br>✈️ ${t.telegram || '-'}`;
         let codeDisplay = "";
+        
         if (!t.isActivated) { codeDisplay = `⏱️ ጊዜያዊ ኮድ: <b class="text-warning" style="font-size:1.1rem; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px;">${t.activationCode}</b>`;
         } 
         else { codeDisplay = `<span class="text-success">🔒 ተከራዩ የራሱን ምስጢር ቆልፏል</span>`;
@@ -275,6 +285,7 @@ function renderAdminPanel() {
         let loginInfo = `👤 አባል ስም: <code>${t.username}</code><br>${codeDisplay}<br>🛠️ ሰራተኛ: <code>${staffCnt} የተመዘገቡ</code>`;
         let contractDisplay = `<span>${t.contractType || 'በወር'}</span><br><b class="text-warning">${t.registrationFee || 0} ETB</b>`;
         let bType = t.businessType || 'አጠቃላይ ንግድ';
+        
         tbody.innerHTML += `<tr>
             <td><b>${t.shopName}</b><br><span style="color:var(--accent-color); font-size:0.8rem;">[${bType}]</span></td>
             <td>${profileInfo}</td><td>${loginInfo}</td><td>${contractDisplay}</td>
@@ -295,7 +306,7 @@ function renderAdminPanel() {
     document.getElementById('adminTotalBuyers').innerText = Object.keys(localDB.buyers || {}).length;
     
     renderAdminBuyers();
-    if(typeof renderAdminRevenueList === "function") renderAdminRevenueList(); // የተስተካከለው የገቢ ዝርዝር ኮድ እዚህ ይጠራል
+    if(typeof renderAdminRevenueList === "function") renderAdminRevenueList();
     if(needsPush) pushToFirebase();
 }
 
@@ -313,7 +324,7 @@ function renderAdminBuyers() {
         tbody.innerHTML += `<tr>
             <td>👤 ${b.username}</td><td>📞 ${b.phone}</td><td>${status}</td>
             <td style="display:flex; gap:5px;">
-                <button class="${actionClass} btn-sm" onclick="toggleBuyerStatus('${b.username}')">🚫 ${actionText}</button>
+                 <button class="${actionClass} btn-sm" onclick="toggleBuyerStatus('${b.username}')">🚫 ${actionText}</button>
                 <button class="btn-expense btn-sm" onclick="deleteBuyer('${b.username}')">🗑️ አጥፋ</button>
             </td>
         </tr>`;
