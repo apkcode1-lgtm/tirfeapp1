@@ -2,16 +2,19 @@ window.saveAdminSystemSettings = function() {
     let tgToken = document.getElementById('adminTgToken').value.trim();
     let tgChatId = document.getElementById('adminTgChatId').value.trim();
     let bankAccount = document.getElementById('adminBankInfo').value.trim();
+
     if(!localDB.adminSettings) localDB.adminSettings = {};
     localDB.adminSettings.tgToken = tgToken;
     localDB.adminSettings.tgChatId = tgChatId;
     localDB.adminSettings.bankAccount = bankAccount;
     pushToFirebase();
+
     showCustomAlert("ተሳክቷል", "የዋና አከራይ ቴሌግራም እና ባንክ መረጃ በተሳካ ሁኔታ ተቀምጧል!");
 };
 
 window.openVATSettings = function() {
     let currentVat = (localDB.adminSettings && localDB.adminSettings.vatRate) ? localDB.adminSettings.vatRate : 0;
+
     showFormModal("🧾 የቫት (VAT) ማስተካከያ", [
         { id: "vatRate", label: "የቫት መጠን በመቶኛ (%) ያስገቡ፦", type: "number", placeholder: "ምሳሌ: 15", defaultValue: currentVat }
     ], (res) => {
@@ -29,7 +32,8 @@ window.openTariffSettings = function() {
         { id: "tariffAmount", label: "የብር መጠን ያስገቡ (ETB)", type: "number", placeholder: "0.00" }
     ], (res) => {
         if(!localDB.tariffs) localDB.tariffs = { low: 500, medium: 1000, high: 2000 };
-        localDB.tariffs[res.tariffTier] = parseFloat(res.tariffAmount) || 0; pushToFirebase();
+        localDB.tariffs[res.tariffTier] = parseFloat(res.tariffAmount) || 0; 
+        pushToFirebase();
         showCustomAlert("ተሳክቷል", `ታሪፉ ለ "${res.tariffTier}" በተሳካ ሁኔታ ወደ ${res.tariffAmount} ETB ተቀይሯል! አዲስ ሲመዘገቡ ይህ ዋጋ ይመጣል።`);
     });
 };
@@ -66,7 +70,8 @@ function registerTenant() {
     let expiryDate = document.getElementById('newExpiryDate').value;
     
     if(!shop || !user || !expiryDate || !fullName || !phone || !newEmail || !region || !zone || !woreda || !kebele || !houseNo || !tinNum || !tradeReg) { 
-        showCustomAlert("ስህተት", "እባክዎ መሠረታዊ እና አስገዳጅ መረጃዎችን ሙሉ በሙሉ ያሟሉ!"); return; 
+        showCustomAlert("ስህተት", "እባክዎ መሠረታዊ እና አስገዳጅ መረጃዎችን ሙሉ በሙሉ ያሟሉ!");
+        return; 
     }
 
     let checkUser = isSystemDataTaken(user, phone, "", "");
@@ -101,7 +106,8 @@ function registerTenant() {
             document.getElementById('newCapitalTier').value = '';
             document.getElementById('newRegion').value = ''; document.getElementById('newZone').value = '';
             document.getElementById('newWoreda').value = ''; document.getElementById('newKebele').value = '';
-            document.getElementById('newHouseNo').value = ''; document.getElementById('newTin').value = ''; document.getElementById('newTradeReg').value = '';
+            document.getElementById('newHouseNo').value = '';
+            document.getElementById('newTin').value = ''; document.getElementById('newTradeReg').value = '';
             
             showCustomAlert("ተሳክቷል", "አዲሱ ተከራይ በተሳካ ሁኔታ ተመዝግቧል! መግቢያ ኮዳቸው: " + genCode + " ነው::");
         };
@@ -134,7 +140,8 @@ function openAdminTenantEditor(user) {
 
 window.toggleAdminBuyersView = function() {
     let main = document.getElementById('adminDashboardMain'); let section = document.getElementById('adminBuyersSection');
-    if(main && section) { main.classList.toggle('hidden'); section.classList.toggle('hidden'); renderAdminBuyers(); }
+    if(main && section) { main.classList.toggle('hidden');
+    section.classList.toggle('hidden'); renderAdminBuyers(); }
 };
 
 window.toggleTenantListView = function() {
@@ -142,15 +149,68 @@ window.toggleTenantListView = function() {
     if(section) section.classList.toggle('hidden');
 };
 
+/* --- አዲስ የተጨመረው የገቢዎች ዝርዝር (Revenues) ሲስተም --- */
+window.toggleRevenuesListView = function() {
+    let main = document.getElementById('adminDashboardMain'); 
+    let section = document.getElementById('adminRevenuesSection');
+    if(main && section) { 
+        main.classList.toggle('hidden');
+        section.classList.toggle('hidden'); 
+        renderRevenuesList(); 
+    }
+};
+
+window.renderRevenuesList = function() {
+    let tbody = document.getElementById('adminRevenuesTableBody'); 
+    if(!tbody) return;
+    tbody.innerHTML = ''; 
+    if(!localDB.revenues) localDB.revenues = {};
+
+    let totalRevenueAmount = 0;
+    Object.keys(localDB.revenues).forEach(key => {
+        let r = localDB.revenues[key];
+        let amount = parseFloat(r.amount) || 0;
+        totalRevenueAmount += amount;
+        
+        let statusBadge = r.status === "active" ? `<span class="badge-success">Active</span>` : `<span class="badge-warning">Pending</span>`;
+        
+        tbody.innerHTML += `<tr>
+            <td>👤 <b>${r.fullName || '-'}</b></td>
+            <td>📞 ${r.phone || '-'}</td>
+            <td style="color:var(--success-color)"><b>${amount.toFixed(2)} ETB</b></td>
+            <td>📅 ${r.date || '-'}</td>
+            <td>${statusBadge}</td>
+            <td>
+                <button class="btn-expense btn-sm" onclick="deleteRevenue('${key}')">🗑️ አጥፋ</button>
+            </td>
+        </tr>`;
+    });
+    
+    let totalElement = document.getElementById('adminTotalRevenuesAmount');
+    if(totalElement) totalElement.innerText = totalRevenueAmount.toFixed(2) + " ETB";
+};
+
+window.deleteRevenue = function(key) {
+    showCustomConfirm("ገቢ ማጥፊያ", "ይህንን ገቢ ማጥፋት ይፈልጋሉ?", () => { 
+        delete localDB.revenues[key]; 
+        pushToFirebase(); 
+        renderRevenuesList(); 
+    });
+};
+/* ---------------------------------------------------- */
+
 function renderAdminPanel() {
     if(localDB.adminSettings) {
-        let tk = document.getElementById('adminTgToken'); if(tk && tk.value==='') tk.value = localDB.adminSettings.tgToken || "";
+        let tk = document.getElementById('adminTgToken');
+        if(tk && tk.value==='') tk.value = localDB.adminSettings.tgToken || "";
         let ci = document.getElementById('adminTgChatId'); if(ci && ci.value==='') ci.value = localDB.adminSettings.tgChatId || "";
         let bi = document.getElementById('adminBankInfo'); if(bi && bi.value==='') bi.value = localDB.adminSettings.bankAccount || "";
     }
-    let tbody = document.getElementById('tenantTableBody'); tbody.innerHTML = '';
+    let tbody = document.getElementById('tenantTableBody');
+    tbody.innerHTML = '';
     let query = document.getElementById('adminSearchInput') ? document.getElementById('adminSearchInput').value.trim().toLowerCase() : "";
-    let totalTenants = 0; let activeTenants = 0; let totalFeesCollected = 0; let alertsHTML = ''; let needsPush = false;
+    let totalTenants = 0; let activeTenants = 0;
+    let totalFeesCollected = 0; let alertsHTML = ''; let needsPush = false;
     
     Object.keys(localDB.tenants).forEach(key => {
         let t = localDB.tenants[key]; totalTenants++;
@@ -166,7 +226,8 @@ function renderAdminPanel() {
                     t.expiryNotified = true; localDB.tenants[key] = t; needsPush = true;
                 }
             } else if (diff > 5 && t.expiryNotified) {
-                t.expiryNotified = false; localDB.tenants[key] = t; needsPush = true;
+                t.expiryNotified = false;
+                localDB.tenants[key] = t; needsPush = true;
             }
         }
 
@@ -174,13 +235,17 @@ function renderAdminPanel() {
         let statusBadge = t.status === "active" ? `<span class="badge-success">Active</span>` : `<span class="badge-danger">Blocked</span>`;
         let profileInfo = `👤 <b>${t.fullName || '-'}</b><br>📞 ${t.phone || '-'}<br>📍 ${t.address || '-'}<br>✈️ ${t.telegram || '-'}`;
         let codeDisplay = "";
-        if (!t.isActivated) { codeDisplay = `⏱️ ጊዜያዊ ኮድ: <b class="text-warning" style="font-size:1.1rem; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px;">${t.activationCode}</b>`; } 
-        else { codeDisplay = `<span class="text-success">🔒 ተከራዩ የራሱን ምስጢር ቆልፏል</span>`; }
+        
+        if (!t.isActivated) { codeDisplay = `⏱️ ጊዜያዊ ኮድ: <b class="text-warning" style="font-size:1.1rem; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px;">${t.activationCode}</b>`;
+        } 
+        else { codeDisplay = `<span class="text-success">🔒 ተከራዩ የራሱን ምስጢር ቆልፏል</span>`;
+        }
         
         let staffCnt = t.staffAccounts ? t.staffAccounts.length : 0;
         let loginInfo = `👤 አባል ስም: <code>${t.username}</code><br>${codeDisplay}<br>🛠️ ሰራተኛ: <code>${staffCnt} የተመዘገቡ</code>`;
         let contractDisplay = `<span>${t.contractType || 'በወር'}</span><br><b class="text-warning">${t.registrationFee || 0} ETB</b>`;
         let bType = t.businessType || 'አጠቃላይ ንግድ';
+        
         tbody.innerHTML += `<tr>
             <td><b>${t.shopName}</b><br><span style="color:var(--accent-color); font-size:0.8rem;">[${bType}]</span></td>
             <td>${profileInfo}</td><td>${loginInfo}</td><td>${contractDisplay}</td>
@@ -199,7 +264,9 @@ function renderAdminPanel() {
     document.getElementById('adminActiveTenants').innerText = activeTenants;
     document.getElementById('adminTotalFees').innerText = totalFeesCollected.toFixed(1) + " ETB";
     document.getElementById('adminTotalBuyers').innerText = Object.keys(localDB.buyers || {}).length;
+    
     renderAdminBuyers();
+    renderRevenuesList(); // አዲሱ የገቢ ዝርዝር ኮድ እዚህ ይጠራል
     if(needsPush) pushToFirebase();
 }
 
@@ -210,6 +277,7 @@ window.deleteBuyer = function(username) {
 function renderAdminBuyers() {
     let tbody = document.getElementById('adminBuyersTableBody'); if(!tbody) return;
     tbody.innerHTML = ''; if(!localDB.buyers) return;
+    
     Object.values(localDB.buyers).forEach(b => {
         let status = b.status === "blocked" ? '<span class="badge-danger">Blocked / ታግዷል</span>' : '<span class="badge-success">Active / ይሰራል</span>';
         let actionText = b.status === "blocked" ? "Unblock" : "Block";
@@ -240,5 +308,10 @@ function regenerateTenantCode(user) {
     showCustomAlert("ኮድ ተለውጧል", `ለተከራዩ አዲስ ኮድ ተፈጥሯል፦ ${newCode}`);
 }
 
-function toggleTenantStatus(user) { let t = localDB.tenants[user]; t.status = t.status === "active" ? "blocked" : "active"; pushToFirebase(); renderAdminPanel(); }
-function deleteTenant(user) { showCustomConfirm("ተከራይ ማጥፊያ", "ይህንን ተከራይ ሙሉ በሙሉ ለማጥፋት እርግጠኛ ኖት?", () => { delete localDB.tenants[user]; pushToFirebase(); renderAdminPanel(); }); }
+function toggleTenantStatus(user) { 
+    let t = localDB.tenants[user]; t.status = t.status === "active" ? "blocked" : "active"; pushToFirebase(); renderAdminPanel();
+}
+
+function deleteTenant(user) { 
+    showCustomConfirm("ተከራይ ማጥፊያ", "ይህንን ተከራይ ሙሉ በሙሉ ለማጥፋት እርግጠኛ ኖት?", () => { delete localDB.tenants[user]; pushToFirebase(); renderAdminPanel(); });
+}
