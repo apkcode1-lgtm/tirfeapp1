@@ -1,4 +1,4 @@
-window.saveRevenueProfileData = function() {
+﻿window.saveRevenueProfileData = function() {
     if(!currentRevenueOfficer) return;
     let nName = document.getElementById('revOfficerName').value.trim();
     let nEmail = document.getElementById('revOfficerEmail').value.trim();
@@ -114,4 +114,3 @@ window.openRevenueRegistrationModal = function() {
         showCustomAlert("ተሳክቷል", "የገቢዎች ባለሙያ መረጃ በተሳካ ሁኔታ ተመዝግቧል! ባለሙያው በራሱ ስም ሲገባ ተከራዮችን ያገኛል።");
     });
 };
-
