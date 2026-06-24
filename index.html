@@ -35,17 +35,17 @@
     </div>
 </div>
 
-<div class="container">
+<main class="container">
 
-    <div id="welcomeGateway" class="gateway-box">
+    <section id="welcomeGateway" class="gateway-box">
         <div class="hero-icon" style="font-size: 4rem; margin-bottom: 10px;">🚀</div>
         <h2>እንኳን ደህና መጡ! <span id="syncIndicator" class="hidden offline-tag">Offline ሞድ</span></h2>
         <p>ወደ ዘመናዊው 'ትርፌ' የሱቅ መቆጣጠሪያ ሲስተም</p>
         <button class="gateway-btn" onclick="openUnifiedLogin()" style="justify-content: center; background: var(--success-color); color: black; font-size: 1.2rem;">🔑 ሎጊን (Login)</button>
         <button class="gateway-btn" onclick="openUnifiedRegister()" style="justify-content: center; background: var(--warning-color); color: black; font-size: 1.2rem;">📝 ሪጅስተር (Register)</button>
-    </div>
+    </section>
 
-    <div id="unifiedLoginBox" class="login-box hidden">
+    <section id="unifiedLoginBox" class="login-box hidden">
         <h2>🔒 ወደ ሲስተሙ መግቢያ</h2>
         <p>እባክዎ መረጃዎን በትክክል ያስገቡ</p>
         <input type="text" id="loginUnifiedUser" placeholder="የተጠቃሚ ስም (Username) ወይም ስልክ ቁጥር">
@@ -57,9 +57,9 @@
         </div>
         <p id="loginUnifiedError" style="color: var(--danger-color); margin-top: 15px; font-size: 0.95rem; font-weight: bold;"></p>
         <button class="btn-config btn-block" style="margin-top: 20px;" onclick="goToGateway()">⬅️ ወደ ኋላ ተመለስ</button>
-    </div>
+    </section>
 
-    <div id="unifiedRegisterBox" class="login-box hidden" style="max-width: 600px;">
+    <section id="unifiedRegisterBox" class="login-box hidden" style="max-width: 600px;">
         <h2>📝 አዲስ አካውንት መመዝገቢያ</h2>
         <select id="unifiedRegRole" onchange="toggleUnifiedRegForm()" style="margin-bottom: 15px; font-size: 1.1rem; font-weight: bold; color: var(--accent-color);">
             <option value="buyer">🛍️ ገዥ (Buyer) ነኝ</option>
@@ -108,6 +108,7 @@
 
                 <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የውል ማቂያ ቀን (Expiry Date)፦</label>
                 <input type="date" id="pub_newExpiryDate" required>
+                
                 <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የመመዝገቢያ/ኪራይ ክፍያ (ETB):</label>
                 <input type="number" id="pub_newRegistrationFee" placeholder="የመመዝገቢያ ክፍያ (ETB)" readonly style="background: rgba(255,255,255,0.1);">
             </div>
@@ -120,10 +121,10 @@
 
         <button class="btn-warning btn-block" style="background:var(--warning-color); color:#000; margin-top:20px; font-size: 1.1rem; padding: 12px; font-weight: bold; grid-column: span 2;" onclick="triggerUnifiedRegistration()">ተመዝገብ (Submit)</button>
         <button class="btn-config btn-block" style="margin-top: 15px; grid-column: span 2;" onclick="goToGateway()">⬅️ ወደ ኋላ ተመለስ</button>
-    </div>
+    </section>
 
-    <div id="buyerPage" class="hidden">
-        <div class="welcome-header">
+    <section id="buyerPage" class="hidden">
+        <header class="welcome-header">
             <h1>🛍️ የዕቃዎችና የሱቆች ማውጫ መድረክ</h1>
             <p>በአቅራቢያዎ ያሉ ሱቆችን ምርቶች፣ ዋጋዎች እና አድራሻ እዚህ ያግኙ። በዴሊቨሪ ማዘዝም ይችላሉ!</p>
             <div id="buyerProfileBadge" style="margin-top:10px; font-size:0.9rem; color:var(--warning-color); font-weight:bold;"></div>
@@ -132,9 +133,9 @@
                 <button class="btn-config" style="background:var(--accent-color); color:#000;" onclick="openBuyerProfileSettings()">⚙️ የፕሮፋይል ሲቲንግ</button>
                 <button class="btn-expense" onclick="logoutBuyer()">🚪 ከገዥ ገፅ ውጣ</button>
             </div>
-        </div>
+        </header>
         
-        <div class="section-box" id="buyerCartSection" style="display: none; border-color: var(--warning-color);">
+        <section class="section-box" id="buyerCartSection" style="display: none; border-color: var(--warning-color);">
             <h2 style="color:var(--warning-color);">🛒 የእኔ የዕቃዎች ቅርጫት (My Cart)</h2>
             <div class="table-responsive">
                 <table style="width: 100%; margin-bottom: 10px;">
@@ -146,9 +147,9 @@
                 አጠቃላይ ሂሳብ: <span id="buyerCartTotalSum" style="color: var(--success-color);">0</span> ብር
             </div>
             <button class="btn-sell btn-block" style="background-color: #f59e0b; color: #000; font-size: 1.1rem; border-radius: 8px;" onclick="checkoutBuyerCart()">✅ እርግጠኛ ነኝ ትዕዛዙን ወደ ሱቆች ላክ</button>
-        </div>
+        </section>
         
-        <div class="section-box">
+        <section class="section-box">
             <h2>📦 የጠየቋቸው ትዕዛዞች (Orders) እና ደረሰኞች</h2>
             <div class="table-responsive">
                 <table>
@@ -171,27 +172,27 @@
                     <tbody id="buyerReceiptsBody"></tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <div class="section-box">
+        <section class="section-box">
             <h2>🛒 በአሁኑ ሰዓት በገበያ ላይ ያሉ ሱቆችና ዕቃዎች</h2>
             <div class="search-container">
                 <input type="text" id="buyerSearchInput" class="search-input" placeholder="🔍 ዕቃ በስም ለመፈለግ እዚህ ይጻፉ..." oninput="renderBuyerCatalog()">
             </div>
             <div id="buyerCategoryContainer" class="category-filters"></div>
             <div id="buyerShopsContainer" class="shops-grid"></div>
-        </div>
-    </div>
+        </section>
+    </section>
 
-    <div id="adminPage" class="hidden">
-        <div class="welcome-header">
+    <section id="adminPage" class="hidden">
+        <header class="welcome-header">
             <h1>👑 የባለቤቱ ማዕከላዊ ቁጥጥር ፓነል</h1>
             <p>እዚህ ገጽ ላይ አዳዲስ ተከራዮችን መመዝገብ፣ የውል ሁኔታ መወሰን እና ማስተዳደር ይችላሉ።</p>
             <button class="btn-expense" style="margin-top: 15px; width:100%;" onclick="logout()">🚪 ከሲስተሙ ውጣ</button>
-        </div>
+        </header>
 
-        <div id="adminDashboardMain">
-            <div class="dashboard" style="margin-bottom: 20px;">
+        <section id="adminDashboardMain">
+            <section class="dashboard" style="margin-bottom: 20px;">
                 <div class="card" style="border-left: 4px solid var(--accent-color);">
                     <h3>ጠቅላላ ተከራዮች</h3>
                     <p id="adminTotalTenants">0</p>
@@ -209,19 +210,19 @@
                     <p id="adminTotalBuyers">0</p>
                     <button class="btn-config btn-sm" style="margin-top:8px; width:100%; font-size:0.8rem;" onclick="toggleAdminBuyersView()">ገዦችን በዝርዝር እይ</button>
                 </div>
-            </div>
+            </section>
 
             <div id="adminExpiryAlerts"></div>
 
-            <div style="display:flex; gap:10px; margin-bottom: 20px; flex-wrap: wrap;">
+            <nav style="display:flex; gap:10px; margin-bottom: 20px; flex-wrap: wrap;">
                 <button class="btn-sell" onclick="toggleTenantListView()">👥 ተከራዮችን ዝርዝር እይ</button>
                 <button class="btn-config" style="background-color: #f59e0b; color: black;" onclick="openTariffSettings()">💰 የታሪፍ ሲቲንግ</button>
                 <button class="btn-draw" onclick="openVATSettings()">🧾 የቫት (VAT) ሲቲንግ</button>
                 <button class="btn-config" style="background-color: var(--accent-color); color: black;" onclick="openRevenueRegistrationModal()">🏛️ ገቢወች ምዝገባ</button>
                 <button class="btn-config" style="background-color: #8b5cf6; color: white;" onclick="toggleAdminRevenueView()">👥 ገቢዎች ዝርዝር</button>
-            </div>
+            </nav>
 
-            <div class="section-box" style="border-color: var(--success-color);">
+            <section class="section-box" style="border-color: var(--success-color);">
                 <h2 style="color: var(--success-color);">➕ አዲስ ተከራይ መመዝገቢያ ፎርም (Admin)</h2>
                 <div id="regTenantForm" style="margin-top: 15px; text-align: left; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <input type="text" id="newShopName" placeholder="የሱቅ ስም (ምሳሌ፡ አልፋ) (ግዴታ)">
@@ -258,6 +259,7 @@
 
                         <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የውል ማቂያ ቀን (Expiry Date)፦</label>
                         <input type="date" id="newExpiryDate" required>
+                        
                         <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የመመዝገቢያ/ኪራይ ክፍያ (ETB):</label>
                         <input type="number" id="newRegistrationFee" placeholder="የመመዝገቢያ ክፍያ (ETB)" readonly style="background: rgba(255,255,255,0.1);">
                     </div>
@@ -268,9 +270,9 @@
                     </div>
                     <button class="btn-warning btn-block" style="background:var(--warning-color); color:#000; font-weight:bold; padding:12px; margin-top:10px; border-radius:8px; grid-column: span 2;" onclick="registerTenant()">ምዝገባውን ላክ (Submit)</button>
                 </div>
-            </div>
+            </section>
 
-            <div class="section-box hidden" id="adminTenantsSection">
+            <section class="section-box hidden" id="adminTenantsSection">
                 <h2>📈 የተከራዮች ሁኔታ እና የውል መቆጣጠሪያ</h2>
                 <div class="search-container">
                     <input type="text" id="adminSearchInput" class="search-input" placeholder="🔍 ተከራይን በዩዘርኔም (Username) ብቻ በቀላሉ ለመፈለግ..." oninput="renderAdminPanel()">
@@ -291,9 +293,9 @@
                         <tbody id="tenantTableBody"></tbody>
                     </table>
                 </div>
-            </div>
+            </section>
 
-            <div class="section-box" style="border-color: #f59e0b;">
+            <section class="section-box" style="border-color: #f59e0b;">
                 <h2 style="color: #f59e0b;">📧 የኢሜል ማዋቀሪያ (Email SMTP Settings)</h2>
                 <p style="font-size: 0.85rem; color:#94a3b8; margin-bottom:10px;">ሲስተሙ የኢሜል ማረጋገጫ ኮድ ሲልክ የሚጠቀምበት ማዋቀሪያ</p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -301,9 +303,9 @@
                     <input type="password" id="adminAppPassConfig" placeholder="Google App Password (ባለ 16 አሃዝ)">
                 </div>
                 <button class="btn-sell btn-block" style="margin-top: 10px;" onclick="saveAdminEmailSettings()">💾 ሲቲንግ አስቀምጥ</button>
-            </div>
+            </section>
             
-            <div class="section-box" style="border-color: var(--accent-color); margin-top: 20px;">
+            <section class="section-box" style="border-color: var(--accent-color); margin-top: 20px;">
                 <h2 style="color: var(--accent-color);">🤖 የዋና አከራይ ቴሌግራም እና ባንክ ማዋቀሪያ</h2>
                 <p style="font-size: 0.85rem; color:#94a3b8; margin-bottom:10px;">የአዳዲስ ተከራዮች እና የውል ማብቂያ ኖቲፊኬሽን ለዋና አከራይ የሚላክበት</p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -312,11 +314,11 @@
                     <input type="text" id="adminBankInfo" placeholder="የአከራይ የባንክ መረጃ / ሂሳብ ቁጥር" style="grid-column: span 2;">
                 </div>
                 <button class="btn-sell btn-block" style="margin-top: 10px; background-color: var(--accent-color);" onclick="saveAdminSystemSettings()">💾 ቴሌግራም እና ባንክ ሲቲንግ አስቀምጥ</button>
-            </div>
+            </section>
 
-        </div> 
+        </section> 
         
-        <div class="section-box hidden" id="adminBuyersSection" style="border-color: var(--purple-color);">
+        <section class="section-box hidden" id="adminBuyersSection" style="border-color: var(--purple-color);">
             <button class="btn-config btn-sm" style="margin-bottom:15px;" onclick="toggleAdminBuyersView()">⬅️ ወደ ዳሽቦርድ ተመለስ</button>
             <h2 style="color: var(--purple-color);">👥 የገዥዎች ዝርዝር እና መቆጣጠሪያ</h2>
             <div class="table-responsive">
@@ -325,9 +327,9 @@
                     <tbody id="adminBuyersTableBody"></tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <div class="section-box hidden" id="adminRevenueSection" style="border-color: #8b5cf6;">
+        <section class="section-box hidden" id="adminRevenueSection" style="border-color: #8b5cf6;">
             <button class="btn-config btn-sm" style="margin-bottom:15px;" onclick="toggleAdminRevenueView()">⬅️ ወደ ዳሽቦርድ ተመለስ</button>
             <h2 style="color: #8b5cf6;">🏛️ የገቢዎች ባለስልጣን (Revenue Officers) ዝርዝር</h2>
             <div class="table-responsive">
@@ -336,21 +338,21 @@
                     <tbody id="adminRevenueTableBody"></tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-    </div>
+    </section>
 
-    <div id="revenuePage" class="hidden">
-        <div class="welcome-header">
+    <section id="revenuePage" class="hidden">
+        <header class="welcome-header">
             <h1>🏛️ የገቢዎች ባለስልጣን ማዕከላዊ ሲስተም</h1>
             <p id="revenueOfficerProfile" style="color: var(--accent-color); margin-top: 5px; font-weight: bold;"></p>
             <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
                 <button class="btn-config" style="background-color: var(--purple-color); color: white;" onclick="document.getElementById('revenueProfileSettingsCard').classList.toggle('hidden')">⚙️ የፕሮፋይል ሲቲንግ (Profile Settings)</button>
                 <button class="btn-expense" style="width: 100%; max-width: 200px;" onclick="logout()">🚪 ከሲስተሙ ውጣ</button>
             </div>
-        </div>
+        </header>
 
-        <div id="revenueProfileSettingsCard" class="section-box hidden" style="border-color: var(--purple-color); margin-bottom: 20px;">
+        <section id="revenueProfileSettingsCard" class="section-box hidden" style="border-color: var(--purple-color); margin-bottom: 20px;">
             <h3 style="color: var(--purple-color); margin-bottom: 10px;">⚙️ የገቢዎች ፕሮፋይል ማስተካከያ</h3>
             <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">እዚህ ላይ የአስተዳዳሪውን ስም፣ ኢሜል እና የይለፍ ቃል ብቻ መቀየር ይችላሉ። ሌላ መረጃ መቀየር አይፈቀድም።</p>
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
@@ -359,9 +361,9 @@
                 <input type="password" id="revOfficerPassword" placeholder="አዲስ የይለፍ ቃል (Password)">
             </div>
             <button class="btn-sell btn-block" style="margin-top: 10px; background-color: var(--purple-color);" onclick="saveRevenueProfileData()">💾 የፕሮፋይል ለውጦችን አስቀምጥ</button>
-        </div>
+        </section>
 
-        <div class="dashboard" style="margin-bottom: 20px;">
+        <section class="dashboard" style="margin-bottom: 20px;">
             <div class="card" style="border-left: 4px solid var(--accent-color);">
                 <h3>በየወሩ የሚሰበሰበው ጠቅላላ ቫት</h3>
                 <p id="revenueMonthlyVatSum" style="color: var(--accent-color);">0.00 ETB</p>
@@ -370,13 +372,13 @@
                 <h3>የአመት አጠቃላይ የቫት ድምር (የወራት ድምር)</h3>
                 <p id="revenueAnnualVatSum" style="color: var(--success-color);">0.00 ETB</p>
             </div>
-        </div>
+        </section>
         
         <div style="text-align: right; margin-bottom: 20px;">
             <button class="btn-expense" style="background:#ef4444; color:#fff; font-weight:bold; padding: 10px 20px; border-radius: 8px;" onclick="closeRevenueBudgetAnnual()">🔒 በጀት ዝጋ (Close Budget)</button>
         </div>
 
-        <div class="section-box" style="border-color: var(--success-color);">
+        <section class="section-box" style="border-color: var(--success-color);">
             <h2 style="color: var(--success-color);">📋 በእርስዎ ስር የተመደቡ ግብር ከፋዮች (ነጋዴዎች)</h2>
             <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px;">በእርስዎ ምዝገባ ጊዜ ካስገቡት ክልል፣ ዞን እና ወረዳ ጋር አንድ አይነት መረጃ ያላቸው ተከራዮች ወደ እርስዎ ይላካሉ።</p>
             <div class="table-responsive">
@@ -395,17 +397,17 @@
                     <tbody id="revenueTenantsBody"></tbody>
                 </table>
             </div>
-        </div>
-    </div>
+        </section>
+    </section>
 
-    <div id="appPage" class="hidden">
+    <section id="appPage" class="hidden">
         
-        <div class="welcome-header">
+        <header class="welcome-header">
             <h1 id="shopTitle">እንኳን ደህና መጡ ወደ " ትርፌ " መቆጣጠሪያ መተግበሪያ</h1>
             <p id="roleSubTitle">ቀልጣፋ፣ ዘመናዊ እና አስተማማኝ የሱቅዎ የሂሳብ ረዳት</p>
-        </div>
+        </header>
 
-        <div id="tenantProfileSection" class="section-box" style="margin-bottom: 20px; border-color: var(--accent-color);">
+        <section id="tenantProfileSection" class="section-box" style="margin-bottom: 20px; border-color: var(--accent-color);">
             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div class="profile-data" style="margin:0;"><label>የሱቅ ስም፡</label> <span id="profShopName" style="margin-left: 5px;">-</span></div>
@@ -414,12 +416,12 @@
                 </div>
                 <button id="btn_profile_editor" class="btn-add btn-sm" onclick="openTenantProfileEditor()">⚙️ የሱቅ መረጃ ማስተካከያ</button>
             </div>
-        </div>
+        </section>
 
         <div id="sessionDisplay" class="session-badge">የዕለቱ መፈላጊ መረጃ በመጠባበቅ ላይ...</div>
         <div id="shiftStatusAlert" class="session-badge hidden" style="color:var(--danger-color); background:rgba(244,63,94,0.1); border-color:var(--danger-color); font-weight:bold; font-size: 1rem;">⚠️ ትኩረት፦ የዛሬው የስራ ሰዓት አብቅቷል። እባክዎ የዕለቱን ሂሳብ መዝጊያ ሪፖርት ያቅርቡ!</div>
 
-        <div class="dashboard" id="ownerDashboard">
+        <section class="dashboard" id="ownerDashboard">
             <div class="card">
                 <h3>የአሁን ካፒታል (ዕቃ ላይ)</h3>
                 <p id="totalCapital" style="color: var(--accent-color);">0.00</p>
@@ -456,20 +458,20 @@
                 <h3>ጠቅላላ የተሰበሰበ የቫት ድምር</h3>
                 <p id="tenantAccumulatedVatDisplay" style="color: #10b981;">0.00 ETB</p>
             </div>
-        </div>
+        </section>
 
-        <div class="dashboard" style="margin-top:-10px;">
+        <section class="dashboard" style="margin-top:-10px;">
             <div class="card" style="grid-column: span 2;">
                 <h3>ማታ በካሽ ሳጥን መገኘት ያለበት</h3>
                 <p id="totalInCash" style="color: #38bdf8; font-size: 1.5rem;">0.00 ETB</p>
             </div>
-        </div>
+        </section>
 
         <div id="chartContainer" style="height: 220px; width: 100%; margin-bottom: 20px;">
             <canvas id="businessChart"></canvas>
         </div>
 
-        <div class="actions">
+        <nav class="actions">
             <button class="btn-add" id="btn_add_item" onclick="openItemRegistrationChoice()">📦 አዲስ ዕቃ መዝግብ</button>
             <button class="btn-sell" id="btn_main_sell" onclick="openSellChoiceModal()" style="font-size: 1.05rem; box-shadow: 0 0 10px rgba(74, 222, 128, 0.4);">🛒 ሸጥ (ወደ Cart ሂድ)</button>
             <button class="btn-draw" id="btn_vat_receipt_panel" style="background-color: #ef4444; color: white; font-weight: bold;" onclick="toggleVatReceiptPanel()">🧾 የቫት ደረሰኝ</button>
@@ -482,9 +484,9 @@
             <button class="btn-next-day" id="btn_next_day" onclick="startNewDaySession()">🔄 አዲስ ቀን ጀምር</button>
             <button class="btn-clear" id="btn_clear_all" onclick="clearAllTenantData()">🗑️ ዳታ አጽዳ</button>
             <button class="btn-expense" id="btn_close_shift" style="background:#f59e0b; color:#000;" onclick="triggerShiftReport()">🔒 የዕለት ሂሳብ ዝጋ (ሪፖርት)</button>
-        </div>
+        </nav>
 
-        <div id="tenantVatReceiptSection" class="section-box hidden" style="border-color: #ef4444; margin-top: 15px;">
+        <section id="tenantVatReceiptSection" class="section-box hidden" style="border-color: #ef4444; margin-top: 15px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h2 style="color: #ef4444; margin: 0;">🧾 የቫት ደረሰኝ መቁረጫ ማዕከል</h2>
                 <div id="vatReceiptDateDisplay" style="background: rgba(239, 68, 68, 0.2); padding: 5px 12px; border-radius: 6px; font-weight: bold; color: #f87171;">ቀን፦ <span id="vatCurrentDateSpan">--/--/----</span></div>
@@ -503,9 +505,9 @@
                 </div>
                 <button class="btn-sell btn-block" style="margin-top: 12px; background-color: #ef4444;" onclick="generateStandaloneVatReceipt()">👉 የቫት ደረሰኝ አውጣ</button>
             </div>
-        </div>
+        </section>
 
-        <div class="section-box" id="remoteCartSection">
+        <section class="section-box" id="remoteCartSection">
             <h2 style="color:var(--warning-color);">🛒 የገዥዎች Cart (Online Orders)</h2>
             <div class="table-responsive">
                 <table>
@@ -513,9 +515,9 @@
                     <tbody id="sellerRemoteCartsBody"></tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <div class="section-box" id="deliverySection">
+        <section class="section-box" id="deliverySection">
             <h2>🚚 የዴሊቨሪ ትዕዛዞች (Delivery Orders)</h2>
             <div class="table-responsive">
                 <table>
@@ -523,9 +525,9 @@
                     <tbody id="sellerDeliveryBody"></tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <div class="section-box">
+        <section class="section-box">
             <h2>📦 የዕቃዎች ዝርዝር እና ክምችት</h2>
             <div id="owner_add_box" style="background: rgba(255, 255, 255, 0.02); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
@@ -567,9 +569,9 @@
                     <tbody id="inventoryBody"></tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
-        <div class="section-box">
+        <section class="section-box">
             <h2>🧾 የደረሰኞች ማህደር (Receipt History)</h2>
             <div style="margin-bottom:15px; display: flex; gap: 10px; align-items: center; max-width: 400px;">
                 <label style="font-size:0.9rem; color:var(--accent-color); white-space: nowrap;">📅 የደረሰኝ መፈለጊያ ቀን፦</label>
@@ -591,26 +593,26 @@
                     <tbody id="receiptHistoryTableBody"></tbody>
                 </table>
             </div>
-        </div>
+        </section>
 
         <div class="grid-3">
-            <div class="section-box">
+            <section class="section-box">
                 <h2>💳 የዕዳ መዝገብ</h2>
                 <div class="table-responsive">
                     <table>
                         <tbody id="creditBody"></tbody>
                     </table>
                 </div>
-            </div>
-            <div class="section-box">
+            </section>
+            <section class="section-box">
                 <h2>💸 ከሳጥን የተነሳ ገንዘብ / መልስ</h2>
                 <div class="table-responsive">
                     <table>
                         <tbody id="drawBody"></tbody>
                     </table>
                 </div>
-            </div>
-            <div class="section-box" id="historySection">
+            </section>
+            <section class="section-box" id="historySection">
                 <h2>📅 የቀደሙ ቀናት ታሪክ እና ማህደር</h2>
                 <div style="margin-bottom:10px;">
                     <label style="font-size:0.8rem; color:var(--accent-color);">ቀን መምረጫ (Filter by Date)፦</label>
@@ -621,10 +623,10 @@
                         <tbody id="historyBody"></tbody>
                     </table>
                 </div>
-            </div>
+            </section>
         </div>
 
-        <div class="section-box">
+        <section class="section-box">
             <h2>⚙️ መቼቶች እና ሲስተም መውጫ</h2>
             <div class="profile-data">
                 <label>የመተግበሪያ ገጽታ (Theme)፦</label> 
@@ -636,9 +638,9 @@
                 </select>
             </div>
             <button class="btn-expense btn-block" style="margin-top: 20px; padding: 15px;" onclick="logout()">🚪 ከአፑ በሰላም ውጣ (Logout)</button>
-        </div>
-    </div>
-</div>
+        </section>
+    </section>
+</main>
 
 <div id="modalOverlay" class="modal-overlay hidden">
     <div id="staffManageModal" class="modal-card hidden">
