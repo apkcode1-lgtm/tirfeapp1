@@ -1,4 +1,4 @@
-﻿window.saveRevenueProfileData = function() {
+window.saveRevenueProfileData = function() {
     if(!currentRevenueOfficer) return;
     let nName = document.getElementById('revOfficerName').value.trim();
     let nEmail = document.getElementById('revOfficerEmail').value.trim();
@@ -7,8 +7,11 @@
     if(nName) currentRevenueOfficer.authName = nName;
     if(nEmail) currentRevenueOfficer.authEmail = nEmail;
     if(nPass) currentRevenueOfficer.authPass = nPass;
-    localDB.revenueAuthorities[currentRevenueOfficer.authUser] = currentRevenueOfficer;
+    
+    let targetUser = currentRevenueOfficer.authUser || currentRevenueOfficer.username;
+    localDB.revenueAuthorities[targetUser] = currentRevenueOfficer;
     pushToFirebase();
+    
     document.getElementById('revenueProfileSettingsCard').classList.add('hidden');
     renderRevenuePanel();
     showCustomAlert("ተሳክቷል", "የፕሮፋይል መረጃዎ (ስም፣ ኢሜል እና የይለፍ ቃል) በተሳካ ሁኔታ ተስተካክሏል!");
@@ -20,6 +23,7 @@ function renderRevenuePanel() {
     document.getElementById('revOfficerEmail').value = currentRevenueOfficer.authEmail || "";
     document.getElementById('revOfficerPassword').value = currentRevenueOfficer.authPass || "";
     document.getElementById('revenueOfficerProfile').innerText = `👤 ስም: ${currentRevenueOfficer.authName} | 📍 ምድብ: ${currentRevenueOfficer.authRegion} / ${currentRevenueOfficer.authZone} / ${currentRevenueOfficer.authWoreda}`;
+    
     let mSum = currentRevenueOfficer.monthlyVat || 0;
     let aSum = currentRevenueOfficer.annualVat || 0;
     document.getElementById('revenueMonthlyVatSum').innerText = mSum.toFixed(2) + " ETB";
@@ -35,15 +39,18 @@ function renderRevenuePanel() {
                t.woreda === currentRevenueOfficer.authWoreda) {
             
                 count++;
+          
                 let accumulatedVat = (t.data && t.data.accumulatedVat) ? parseFloat(t.data.accumulatedVat) : 0;
                 
                 tbody.innerHTML += `<tr>
                     <td><b>${t.fullName}</b><br><small style="color:var(--accent-color)">${t.shopName}</small></td>
                     <td>📞 ${t.phone}</td>
+         
                     <td>${t.region} / ${t.zone} / ${t.woreda}</td>
                     <td>${t.kebele} / ${t.houseNo}</td>
                     <td style="color:var(--warning-color); font-weight:bold;">${t.tinNumber}</td>
                     <td style="color:var(--warning-color); font-weight:bold;">${accumulatedVat.toFixed(2)} ETB</td>
+                  
                     <td><button class="btn-success btn-sm" onclick="payTenantVat('${t.username}')">ክፈል (Pay)</button></td>
                 </tr>`;
             }
@@ -71,10 +78,13 @@ window.payTenantVat = function(username) {
 
         currentRevenueOfficer.monthlyVat += vatToPay;
         currentRevenueOfficer.annualVat += vatToPay;
-        localDB.revenueAuthorities[currentRevenueOfficer.authUser] = currentRevenueOfficer;
+        
+        let targetUser = currentRevenueOfficer.authUser || currentRevenueOfficer.username;
+        localDB.revenueAuthorities[targetUser] = currentRevenueOfficer;
 
         t.data.accumulatedVat = 0;
         localDB.tenants[username] = t;
+    
         pushToFirebase();
         renderRevenuePanel();
         showCustomAlert("ተሳክቷል", "ክፍያው በተሳካ ሁኔታ ተሰብስቧል! የነጋዴው የተሰበሰበ ቫት 0.00 ሆኗል።");
@@ -86,31 +96,14 @@ window.closeRevenueBudgetAnnual = function() {
         if(currentRevenueOfficer) {
             currentRevenueOfficer.monthlyVat = 0;
             currentRevenueOfficer.annualVat = 0;
-            localDB.revenueAuthorities[currentRevenueOfficer.authUser] = currentRevenueOfficer;
+            
+            let targetUser = currentRevenueOfficer.authUser || currentRevenueOfficer.username;
+            localDB.revenueAuthorities[targetUser] = currentRevenueOfficer;
+            
             pushToFirebase();
+          
             renderRevenuePanel();
             showCustomAlert("በጀት ተዘግቷል", "የአመቱ የቫት በጀት በተሳካ ሁኔታ ተዘግቶ ወደ 0.00 ተመልሷል።");
         }
-    });
-};
-
-window.openRevenueRegistrationModal = function() {
-    showFormModal("🏛️ አዲስ የገቢዎች ባለስልጣን ምዝገባ", [
-        { id: "authName", label: "የባለሙያው / ኃላፊው ስም (Name)", type: "text" },
-        { id: "authUser", label: "የመግቢያ ስም (Username)", type: "text" },
-        { id: "authEmail", label: "ኢሜል (Gmail)", type: "email" },
-        { id: "authPass", label: "የይለፍ ቃል (Password)", type: "password" },
-        { id: "authPhone", label: "ስልክ ቁጥር", type: "tel" },
-        { id: "authRegion", label: "ክልል (Region)", type: "text" },
-        { id: "authZone", label: "ዞን (Zone)", type: "text" },
-        { id: "authWoreda", label: "ወረዳ (Woreda)", type: "text" }
-    ], (res) => {
-        if(!res.authName || !res.authUser || !res.authEmail || !res.authPass || !res.authPhone || !res.authRegion || !res.authZone || !res.authWoreda) {
-            showCustomAlert("ስህተት", "እባክዎ ሁሉንም መረጃዎች ይሙሉ!"); return;
-        }
-        if(!localDB.revenueAuthorities) localDB.revenueAuthorities = {};
-        localDB.revenueAuthorities[res.authUser] = res;
-        pushToFirebase();
-        showCustomAlert("ተሳክቷል", "የገቢዎች ባለሙያ መረጃ በተሳካ ሁኔታ ተመዝግቧል! ባለሙያው በራሱ ስም ሲገባ ተከራዮችን ያገኛል።");
     });
 };
