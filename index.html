@@ -101,12 +101,12 @@
                 </select>
 
                 <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የውል ዓይነት (Contract Type)፦</label>
-                <select id="pub_newContractType">
+                <select id="pub_newContractType" onchange="autoFillPubCapitalFee()">
                     <option value="በወር">በወር (Monthly)</option>
                     <option value="በዓመት">በዓመት (Yearly)</option>
                 </select>
 
-                <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የውል ማቂያ ቀን (Expiry Date)፦</label>
+                <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የውል ማብቂያ ቀን (Expiry Date)፦</label>
                 <input type="date" id="pub_newExpiryDate" required>
                 
                 <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የመመዝገቢያ/ኪራይ ክፍያ (ETB):</label>
@@ -257,7 +257,7 @@
                             <option value="በዓመት">በዓመት (Yearly)</option>
                         </select>
 
-                        <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የውል ማቂያ ቀን (Expiry Date)፦</label>
+                        <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የውል ማብቂያ ቀን (Expiry Date)፦</label>
                         <input type="date" id="newExpiryDate" required>
                         
                         <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የመመዝገቢያ/ኪራይ ክፍያ (ETB):</label>
@@ -285,7 +285,7 @@
                                 <th>የተከራይ መገለጫ (Profile)</th>
                                 <th>የመግቢያ ዝርዝር / ኮድ</th>
                                 <th>የውል ዓይነት / ክፍያ</th>
-                                <th>የማቂያ ቀን</th>
+                                <th>የማብቂያ ቀን</th>
                                 <th>የአሁን ሁኔታ</th>
                                 <th>እርምጃዎች</th>
                             </tr>
@@ -412,7 +412,7 @@
                 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                     <div class="profile-data" style="margin:0;"><label>የሱቅ ስም፡</label> <span id="profShopName" style="margin-left: 5px;">-</span></div>
                     <div class="profile-data" style="margin:0;"><label>ኢሜል፡</label> <span id="profGmail" style="color: var(--accent-color); margin-left: 5px;">-</span></div>
-                    <div class="profile-data" id="expiryRowOwner" style="margin:0;"><label>የውል ማቂያ፡</label> <span id="profExpiry" style="color: var(--danger-color); margin-left: 5px;">-</span></div>
+                    <div class="profile-data" id="expiryRowOwner" style="margin:0;"><label>የውል ማብቂያ፡</label> <span id="profExpiry" style="color: var(--danger-color); margin-left: 5px;">-</span></div>
                 </div>
                 <button id="btn_profile_editor" class="btn-add btn-sm" onclick="openTenantProfileEditor()">⚙️ የሱቅ መረጃ ማስተካከያ</button>
             </div>
