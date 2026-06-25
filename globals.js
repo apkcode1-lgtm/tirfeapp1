@@ -16,7 +16,7 @@ let tempStaffForms = [];
 
 function setCategoryFilter(cat) {
     activeCategoryFilter = cat;
-    renderBuyerCatalog();
+    if(typeof renderBuyerCatalog === 'function') renderBuyerCatalog();
 }
 
 // =====================================================================
@@ -30,28 +30,34 @@ function getAvailableLocations() {
     // የገቢዎች ባለስልጣን ከተመዘገበበት ዳታ ላይ ክልል፣ ዞን እና ወረዳዎችን ማውጣት
     for (let key in localDB.revenueAuthorities) {
         let rev = localDB.revenueAuthorities[key];
-        if (rev.region && rev.zone && rev.woreda) {
+        
+        // የገቢዎች ዳታ ላይ ያሉት የክልል ስሞች authRegion, authZone, authWoreda ስለሆኑ ይህንን አስተካክለናል
+        let rRegion = rev.authRegion || rev.region; 
+        let rZone = rev.authZone || rev.zone;
+        let rWoreda = rev.authWoreda || rev.woreda;
+
+        if (rRegion && rZone && rWoreda) {
             
             // ክልል መጨመር
-            if (!locations.regions.includes(rev.region)) {
-                locations.regions.push(rev.region);
+            if (!locations.regions.includes(rRegion)) {
+                locations.regions.push(rRegion);
             }
             
             // ዞን በክልል ስር መጨመር
-            if (!locations.zonesByRegion[rev.region]) {
-                locations.zonesByRegion[rev.region] = [];
+            if (!locations.zonesByRegion[rRegion]) {
+                locations.zonesByRegion[rRegion] = [];
             }
-            if (!locations.zonesByRegion[rev.region].includes(rev.zone)) {
-                locations.zonesByRegion[rev.region].push(rev.zone);
+            if (!locations.zonesByRegion[rRegion].includes(rZone)) {
+                locations.zonesByRegion[rRegion].push(rZone);
             }
 
             // ወረዳ በዞን ስር መጨመር (Region_Zone እንደ ቁልፍ በመጠቀም)
-            let zoneKey = rev.region + "_" + rev.zone;
+            let zoneKey = rRegion + "_" + rZone;
             if (!locations.woredasByZone[zoneKey]) {
                 locations.woredasByZone[zoneKey] = [];
             }
-            if (!locations.woredasByZone[zoneKey].includes(rev.woreda)) {
-                locations.woredasByZone[zoneKey].push(rev.woreda);
+            if (!locations.woredasByZone[zoneKey].includes(rWoreda)) {
+                locations.woredasByZone[zoneKey].push(rWoreda);
             }
         }
     }
@@ -62,11 +68,9 @@ function initLocationDropdowns(regionId, zoneId, woredaId) {
     let regSelect = document.getElementById(regionId);
     let zoneSelect = document.getElementById(zoneId);
     let worSelect = document.getElementById(woredaId);
-    
     if (!regSelect || !zoneSelect || !worSelect) return;
 
     let locs = getAvailableLocations();
-    
     // ክልሎችን መዘርዘር
     regSelect.innerHTML = '<option value="">-- ክልል ይምረጡ --</option>';
     locs.regions.forEach(r => {
@@ -75,7 +79,6 @@ function initLocationDropdowns(regionId, zoneId, woredaId) {
         opt.textContent = r;
         regSelect.appendChild(opt);
     });
-
     zoneSelect.innerHTML = '<option value="">-- መጀመሪያ ክልል ይምረጡ --</option>';
     worSelect.innerHTML = '<option value="">-- መጀመሪያ ዞን ይምረጡ --</option>';
 }
@@ -84,15 +87,12 @@ function handleRegionChange(regionId, zoneId, woredaId) {
     let regSelect = document.getElementById(regionId);
     let zoneSelect = document.getElementById(zoneId);
     let worSelect = document.getElementById(woredaId);
-    
     if (!regSelect || !zoneSelect || !worSelect) return;
 
     let selectedRegion = regSelect.value;
     let locs = getAvailableLocations();
-
     zoneSelect.innerHTML = '<option value="">-- ዞን ይምረጡ --</option>';
     worSelect.innerHTML = '<option value="">-- መጀመሪያ ዞን ይምረጡ --</option>';
-
     if (selectedRegion && locs.zonesByRegion[selectedRegion]) {
         locs.zonesByRegion[selectedRegion].forEach(z => {
             let opt = document.createElement('option');
@@ -107,13 +107,11 @@ function handleZoneChange(regionId, zoneId, woredaId) {
     let regSelect = document.getElementById(regionId);
     let zoneSelect = document.getElementById(zoneId);
     let worSelect = document.getElementById(woredaId);
-    
     if (!regSelect || !zoneSelect || !worSelect) return;
 
     let selectedRegion = regSelect.value;
     let selectedZone = zoneSelect.value;
     let locs = getAvailableLocations();
-
     worSelect.innerHTML = '<option value="">-- ወረዳ ይምረጡ --</option>';
 
     let zoneKey = selectedRegion + "_" + selectedZone;
@@ -135,7 +133,6 @@ function updateAllLocationDropdowns() {
         let currentWor = document.getElementById('pub_newWoreda').value;
         
         initLocationDropdowns('pub_newRegion', 'pub_newZone', 'pub_newWoreda');
-        
         if (currentReg) {
             document.getElementById('pub_newRegion').value = currentReg;
             handleRegionChange('pub_newRegion', 'pub_newZone', 'pub_newWoreda');
@@ -156,7 +153,6 @@ function updateAllLocationDropdowns() {
         let currentWor = document.getElementById('newWoreda').value;
         
         initLocationDropdowns('newRegion', 'newZone', 'newWoreda');
-        
         if (currentReg) {
             document.getElementById('newRegion').value = currentReg;
             handleRegionChange('newRegion', 'newZone', 'newWoreda');
