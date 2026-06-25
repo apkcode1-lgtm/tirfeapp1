@@ -1,8 +1,11 @@
-let localDB = { tenants: {}, buyers: {}, revenueAuthorities: {}, adminSettings: { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0 }, tariffs: { low: 500, medium: 1000, high: 2000 } };
+let localDB = { tenants: {}, buyers: {}, revenueAuthorities: {}, adminSettings: { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' }, tariffs: { low: 500, medium: 1000, high: 2000 } };
 let isOnline = true;
 
 window.addEventListener('online', handleOnlineStatus);
 window.addEventListener('offline', handleOnlineStatus);
+
+// መፍትሄ 1፦ ፔጁ ሪፍሬሽ ሲደረግ ዳታው ወዲያውኑ እንዲጫን ይህ ፈንክሽን መጀመሪያ ላይ መጠራት አለበት
+loadLocalStorageBackup();
 
 function handleOnlineStatus() {
     isOnline = navigator.onLine;
@@ -25,7 +28,7 @@ function loadLocalStorageBackup() {
         if(!localDB.buyers) localDB.buyers = {};
         if(!localDB.revenueAuthorities) localDB.revenueAuthorities = {};
         if(!localDB.tariffs) localDB.tariffs = { low: 500, medium: 1000, high: 2000 };
-        if(!localDB.adminSettings) localDB.adminSettings = { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0 };
+        if(!localDB.adminSettings) localDB.adminSettings = { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' };
     }
 }
 
@@ -34,8 +37,11 @@ function saveToLocalStorage() {
 }
 
 function pushToFirebase() { 
+    // መፍትሄ 2፦ ማንኛውም ዳታ ሲገባ ሁልጊዜ በመጀመሪያ ሎካል ስቶሬጅ ላይ ሴቭ እንዲያደርግ ተደርጓል
+    saveToLocalStorage(); 
+    
     if(isOnline) { 
-        if(typeof db !== 'undefined') db.ref('tirfe_system').set(localDB); 
+        if(typeof db !== 'undefined') db.ref('tirfe_system').set(localDB);
     } 
 }
 
@@ -63,7 +69,8 @@ if(typeof db !== 'undefined') {
             if(!localDB.buyers) localDB.buyers = {};
             if(!localDB.revenueAuthorities) localDB.revenueAuthorities = {};
             if(!localDB.tariffs) localDB.tariffs = { low: 500, medium: 1000, high: 2000 };
-            if(!localDB.adminSettings) localDB.adminSettings = { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0 };
+            if(!localDB.adminSettings) localDB.adminSettings = { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' };
+            
             saveToLocalStorage();
             
             if(typeof currentTenant !== 'undefined' && currentTenant) {
@@ -78,7 +85,7 @@ if(typeof db !== 'undefined') {
                 if(checkBuyer) currentBuyer = checkBuyer;
             }
             if(typeof renderBuyerCatalog === 'function') renderBuyerCatalog();
-
+            
             if(typeof currentRevenueOfficer !== 'undefined' && currentRevenueOfficer) {
                 if(typeof renderRevenuePanel === 'function') renderRevenuePanel();
             }
