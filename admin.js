@@ -1,3 +1,15 @@
+window.saveAdminEmailSettings = function() {
+    let email = document.getElementById('adminEmailConfig').value.trim();
+    let pass = document.getElementById('adminAppPassConfig').value.trim();
+    
+    if(!localDB.adminSettings) localDB.adminSettings = {};
+    localDB.adminSettings.adminEmail = email;
+    localDB.adminSettings.adminAppPass = pass;
+    
+    pushToFirebase();
+    showCustomAlert("ተሳክቷል", "የዋና አከራይ ኢሜል ማዋቀሪያ (SMTP) በተሳካ ሁኔታ ተቀምጧል!");
+};
+
 window.saveAdminSystemSettings = function() {
     let tgToken = document.getElementById('adminTgToken').value.trim();
     let tgChatId = document.getElementById('adminTgChatId').value.trim();
@@ -138,7 +150,7 @@ function openAdminTenantEditor(user) {
 window.toggleAdminBuyersView = function() {
     let main = document.getElementById('adminDashboardMain'); let section = document.getElementById('adminBuyersSection');
     if(main && section) { main.classList.toggle('hidden');
-        section.classList.toggle('hidden'); renderAdminBuyers(); }
+    section.classList.toggle('hidden'); renderAdminBuyers(); }
 };
 
 window.toggleTenantListView = function() {
@@ -177,7 +189,6 @@ window.openRevenueRegistrationModal = function() {
  
         if(localDB.revenueAuthorities[user]) { showCustomAlert("ስህተት", "ይህ ዩዘርኔም አስቀድሞ ተይዟል!"); return; }
 
-        // Data structure explicitly matched to work flawlessly with login and lists
         localDB.revenueAuthorities[user] = {
             username: user,
             authUser: user,
@@ -190,7 +201,6 @@ window.openRevenueRegistrationModal = function() {
             authWoreda: res.revWoreda,
             status: "active"
         };
-        
         pushToFirebase();
         showCustomAlert("✅ ተሳክቷል", "የገቢዎች ባለስልጣን አካውንት በተሳካ ሁኔታ ተመዝግቧል!");
         
@@ -223,7 +233,6 @@ window.renderAdminRevenueList = function() {
             </td>
         </tr>`;
     });
-    
     if(!hasData) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">ምንም የተመዘገበ የገቢዎች ባለስልጣን የለም።</td></tr>`;
     }
@@ -240,11 +249,15 @@ window.deleteRevenueAuth = function(key) {
 
 function renderAdminPanel() {
     if(localDB.adminSettings) {
-        let tk = document.getElementById('adminTgToken');
-        if(tk && tk.value==='') tk.value = localDB.adminSettings.tgToken || "";
+        let tk = document.getElementById('adminTgToken'); if(tk && tk.value==='') tk.value = localDB.adminSettings.tgToken || "";
         let ci = document.getElementById('adminTgChatId'); if(ci && ci.value==='') ci.value = localDB.adminSettings.tgChatId || "";
         let bi = document.getElementById('adminBankInfo'); if(bi && bi.value==='') bi.value = localDB.adminSettings.bankAccount || "";
+        
+        // መፍትሄ 3፦ የኢሜል ሴቲንግ ፎርሞች ዳታ ሪፍሬሽ ሲደረግ እንዲታይ ተደርጓል
+        let ae = document.getElementById('adminEmailConfig'); if(ae && ae.value==='') ae.value = localDB.adminSettings.adminEmail || "";
+        let ap = document.getElementById('adminAppPassConfig'); if(ap && ap.value==='') ap.value = localDB.adminSettings.adminAppPass || "";
     }
+    
     let tbody = document.getElementById('tenantTableBody');
     tbody.innerHTML = '';
     let query = document.getElementById('adminSearchInput') ? document.getElementById('adminSearchInput').value.trim().toLowerCase() : "";
@@ -271,15 +284,12 @@ function renderAdminPanel() {
         }
 
         if (query !== "" && !t.username.toLowerCase().includes(query)) return;
-        
         let statusBadge = t.status === "active" ? `<span class="badge-success">Active</span>` : `<span class="badge-danger">Blocked</span>`;
         let profileInfo = `👤 <b>${t.fullName || '-'}</b><br>📞 ${t.phone || '-'}<br>📍 ${t.address || '-'}<br>✈️ ${t.telegram || '-'}`;
         let codeDisplay = "";
         
         if (!t.isActivated) { codeDisplay = `⏱️ ጊዜያዊ ኮድ: <b class="text-warning" style="font-size:1.1rem; background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:4px;">${t.activationCode}</b>`;
-        } 
-        else { codeDisplay = `<span class="text-success">🔒 ተከራዩ የራሱን ምስጢር ቆልፏል</span>`;
-        }
+        } else { codeDisplay = `<span class="text-success">🔒 ተከራዩ የራሱን ምስጢር ቆልፏል</span>`; }
         
         let staffCnt = t.staffAccounts ? t.staffAccounts.length : 0;
         let loginInfo = `👤 አባል ስም: <code>${t.username}</code><br>${codeDisplay}<br>🛠️ ሰራተኛ: <code>${staffCnt} የተመዘገቡ</code>`;
@@ -324,7 +334,7 @@ function renderAdminBuyers() {
         tbody.innerHTML += `<tr>
             <td>👤 ${b.username}</td><td>📞 ${b.phone}</td><td>${status}</td>
             <td style="display:flex; gap:5px;">
-                 <button class="${actionClass} btn-sm" onclick="toggleBuyerStatus('${b.username}')">🚫 ${actionText}</button>
+                <button class="${actionClass} btn-sm" onclick="toggleBuyerStatus('${b.username}')">🚫 ${actionText}</button>
                 <button class="btn-expense btn-sm" onclick="deleteBuyer('${b.username}')">🗑️ አጥፋ</button>
             </td>
         </tr>`;
@@ -355,3 +365,4 @@ function toggleTenantStatus(user) {
 function deleteTenant(user) { 
     showCustomConfirm("ተከራይ ማጥፊያ", "ይህንን ተከራይ ሙሉ በሙሉ ለማጥፋት እርግጠኛ ኖት?", () => { delete localDB.tenants[user]; pushToFirebase(); renderAdminPanel(); });
 }
+
