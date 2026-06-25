@@ -19,6 +19,7 @@ window.saveRevenueProfileData = function() {
 
 function renderRevenuePanel() {
     if(!currentRevenueOfficer) return;
+    
     document.getElementById('revOfficerName').value = currentRevenueOfficer.authName || "";
     document.getElementById('revOfficerEmail').value = currentRevenueOfficer.authEmail || "";
     document.getElementById('revOfficerPassword').value = currentRevenueOfficer.authPass || "";
@@ -32,25 +33,26 @@ function renderRevenuePanel() {
     let tbody = document.getElementById('revenueTenantsBody');
     tbody.innerHTML = '';
     let count = 0;
+    
     if(localDB.tenants) {
         Object.values(localDB.tenants).forEach(t => {
+            // ተከራዮችን በትክክል በየምድባቸው (ክልል፣ ዞን፣ ወረዳ) ማጣራት
             if(t.region === currentRevenueOfficer.authRegion &&
                t.zone === currentRevenueOfficer.authZone &&
                t.woreda === currentRevenueOfficer.authWoreda) {
             
                 count++;
-          
                 let accumulatedVat = (t.data && t.data.accumulatedVat) ? parseFloat(t.data.accumulatedVat) : 0;
+                let businessTypeDisplay = t.businessType || 'አጠቃላይ ንግድ';
+                let gmailDisplay = t.gmail || 'አልገባም';
                 
                 tbody.innerHTML += `<tr>
-                    <td><b>${t.fullName}</b><br><small style="color:var(--accent-color)">${t.shopName}</small></td>
-                    <td>📞 ${t.phone}</td>
-         
+                    <td><b>${t.fullName}</b><br><small style="color:var(--accent-color)">${t.shopName} | ${businessTypeDisplay}</small></td>
+                    <td>📞 ${t.phone}<br>📧 ${gmailDisplay}</td>
                     <td>${t.region} / ${t.zone} / ${t.woreda}</td>
                     <td>${t.kebele} / ${t.houseNo}</td>
                     <td style="color:var(--warning-color); font-weight:bold;">${t.tinNumber}</td>
                     <td style="color:var(--warning-color); font-weight:bold;">${accumulatedVat.toFixed(2)} ETB</td>
-                  
                     <td><button class="btn-success btn-sm" onclick="payTenantVat('${t.username}')">ክፈል (Pay)</button></td>
                 </tr>`;
             }
@@ -101,7 +103,6 @@ window.closeRevenueBudgetAnnual = function() {
             localDB.revenueAuthorities[targetUser] = currentRevenueOfficer;
             
             pushToFirebase();
-          
             renderRevenuePanel();
             showCustomAlert("በጀት ተዘግቷል", "የአመቱ የቫት በጀት በተሳካ ሁኔታ ተዘግቶ ወደ 0.00 ተመልሷል።");
         }
