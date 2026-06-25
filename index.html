@@ -80,9 +80,17 @@
             <input type="email" id="pub_newEmail" placeholder="ኢሜል አድራሻ (ግዴታ)">
             <input type="tel" id="pub_newPhone" placeholder="ስልክ ቁጥር (10 አሃዝ) (ግዴታ)" maxlength="10">
             <input type="text" id="pub_newTelegram" placeholder="የቴሌግራም መግቢያ (አማራጭ)">
-            <input type="text" id="pub_newRegion" placeholder="ክልል (ግዴታ)">
-            <input type="text" id="pub_newZone" placeholder="ዞን (ግዴታ)">
-            <input type="text" id="pub_newWoreda" placeholder="ወረዳ (ግዴታ)">
+            
+            <select id="pub_newRegion" onchange="handleRegionChange('pub_newRegion', 'pub_newZone', 'pub_newWoreda')">
+                <option value="">-- ክልል ይምረጡ --</option>
+            </select>
+            <select id="pub_newZone" onchange="handleZoneChange('pub_newRegion', 'pub_newZone', 'pub_newWoreda')">
+                <option value="">-- መጀመሪያ ክልል ይምረጡ --</option>
+            </select>
+            <select id="pub_newWoreda">
+                <option value="">-- መጀመሪያ ዞን ይምረጡ --</option>
+            </select>
+            
             <input type="text" id="pub_newKebele" placeholder="ቀበሌ (ግዴታ)">
             <input type="text" id="pub_newHouseNo" placeholder="የቤት ቁጥር (ግዴታ)">
             <input type="text" id="pub_newTin" placeholder="TIN Number (ግዴታ)">
@@ -231,9 +239,17 @@
                     <input type="email" id="newEmail" placeholder="ኢሜል አድራሻ (ግዴታ)">
                     <input type="tel" id="newPhone" placeholder="ስልክ ቁጥር (10 አሃዝ) (ግዴታ)" maxlength="10">
                     <input type="text" id="newTelegram" placeholder="የቴሌግራም መግቢያ (አማራጭ)">
-                    <input type="text" id="newRegion" placeholder="ክልል (ግዴታ)">
-                    <input type="text" id="newZone" placeholder="ዞን (ግዴታ)">
-                    <input type="text" id="newWoreda" placeholder="ወረዳ (ግዴታ)">
+                    
+                    <select id="newRegion" onchange="handleRegionChange('newRegion', 'newZone', 'newWoreda')">
+                        <option value="">-- ክልል ይምረጡ --</option>
+                    </select>
+                    <select id="newZone" onchange="handleZoneChange('newRegion', 'newZone', 'newWoreda')">
+                        <option value="">-- መጀመሪያ ክልል ይምረጡ --</option>
+                    </select>
+                    <select id="newWoreda">
+                        <option value="">-- መጀመሪያ ዞን ይምረጡ --</option>
+                    </select>
+
                     <input type="text" id="newKebele" placeholder="ቀበሌ (ግዴታ)">
                     <input type="text" id="newHouseNo" placeholder="የቤት ቁጥር (ግዴታ)">
                     <input type="text" id="newTin" placeholder="TIN Number (ግዴታ)">
@@ -552,7 +568,7 @@
                 <div class="cart-total-bar" style="display:flex; flex-direction:column; gap:5px;">
                     <div style="font-size: 0.95rem;">የዕቃዎች ድምር (Subtotal): <span id="cartSubTotal" style="color: white;">0</span> ብር</div>
                     <div id="cartVatRow" style="display:none; font-size: 0.9rem; color: var(--danger-color);">ቫት (VAT <span id="cartVatPercent">0</span>%): <span id="cartVatAmount">0.00</span> ብር</div>
-                    <div style="border-top: 1px dashed #eab308; padding-top: 5px;">ጠቅላላ ሂሳብ (Total): <span id="cartTotalSum" style="color: var(--success-color);">0</span> ብር</div>
+                    <div style="border-top: 1px dashed #eab308; padding-top: 5px;">ጠቅላ জরিমানা ሂሳብ (Total): <span id="cartTotalSum" style="color: var(--success-color);">0</span> ብር</div>
                 </div>
 
                 <button class="btn-sell btn-block" style="background-color: #f59e0b; color: #000; font-size: 1.1rem; border-radius: 8px;" onclick="checkoutMainCart()">✅ ክፍያ ፈፅም እና ደረሰኝ ቁረጥ</button>
@@ -763,7 +779,6 @@
 <script src="revenue.js"></script>
 <script src="main_auth.js"></script>
 <script src="main_shop.js"></script>
-
 
 </body>
 </html>
