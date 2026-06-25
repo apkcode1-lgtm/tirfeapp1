@@ -7,7 +7,6 @@ window.saveRevenueProfileData = function() {
     if(nName) currentRevenueOfficer.authName = nName;
     if(nEmail) currentRevenueOfficer.authEmail = nEmail;
     if(nPass) currentRevenueOfficer.authPass = nPass;
-    
     let targetUser = currentRevenueOfficer.authUser || currentRevenueOfficer.username;
     localDB.revenueAuthorities[targetUser] = currentRevenueOfficer;
     pushToFirebase();
@@ -19,7 +18,6 @@ window.saveRevenueProfileData = function() {
 
 function renderRevenuePanel() {
     if(!currentRevenueOfficer) return;
-    
     document.getElementById('revOfficerName').value = currentRevenueOfficer.authName || "";
     document.getElementById('revOfficerEmail').value = currentRevenueOfficer.authEmail || "";
     document.getElementById('revOfficerPassword').value = currentRevenueOfficer.authPass || "";
@@ -29,11 +27,9 @@ function renderRevenuePanel() {
     let aSum = currentRevenueOfficer.annualVat || 0;
     document.getElementById('revenueMonthlyVatSum').innerText = mSum.toFixed(2) + " ETB";
     document.getElementById('revenueAnnualVatSum').innerText = aSum.toFixed(2) + " ETB";
-    
     let tbody = document.getElementById('revenueTenantsBody');
     tbody.innerHTML = '';
     let count = 0;
-    
     if(localDB.tenants) {
         Object.values(localDB.tenants).forEach(t => {
             // ተከራዮችን በትክክል በየምድባቸው (ክልል፣ ዞን፣ ወረዳ) ማጣራት
@@ -100,6 +96,7 @@ window.closeRevenueBudgetAnnual = function() {
             currentRevenueOfficer.annualVat = 0;
             
             let targetUser = currentRevenueOfficer.authUser || currentRevenueOfficer.username;
+        
             localDB.revenueAuthorities[targetUser] = currentRevenueOfficer;
             
             pushToFirebase();
