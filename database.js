@@ -11,6 +11,7 @@ function handleOnlineStatus() {
     isOnline = navigator.onLine;
     const tag = document.getElementById('syncIndicator');
     const criticalScreen = document.getElementById('criticalOfflineScreen');
+    
     if(!isOnline) {
         if(tag) tag.classList.remove('hidden');
         if(criticalScreen) criticalScreen.classList.remove('hidden');
@@ -29,6 +30,9 @@ function loadLocalStorageBackup() {
         if(!localDB.revenueAuthorities) localDB.revenueAuthorities = {};
         if(!localDB.tariffs) localDB.tariffs = { low: 500, medium: 1000, high: 2000 };
         if(!localDB.adminSettings) localDB.adminSettings = { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' };
+        
+        // ዳታው ሲጫን የክልል/ዞን ምርጫዎችን አፕዴት ያድርግ
+        if(typeof updateAllLocationDropdowns === 'function') updateAllLocationDropdowns();
     }
 }
 
@@ -38,8 +42,7 @@ function saveToLocalStorage() {
 
 function pushToFirebase() { 
     // መፍትሄ 2፦ ማንኛውም ዳታ ሲገባ ሁልጊዜ በመጀመሪያ ሎካል ስቶሬጅ ላይ ሴቭ እንዲያደርግ ተደርጓል
-    saveToLocalStorage(); 
-    
+    saveToLocalStorage();
     if(isOnline) { 
         if(typeof db !== 'undefined') db.ref('tirfe_system').set(localDB);
     } 
@@ -72,6 +75,9 @@ if(typeof db !== 'undefined') {
             if(!localDB.adminSettings) localDB.adminSettings = { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' };
             
             saveToLocalStorage();
+            
+            // የገቢዎች ዳታ ከፋየርቤዝ አዲስ ሲገባ የክልል/ዞን ምርጫዎችም በራሳቸው አፕዴት ይሁኑ
+            if(typeof updateAllLocationDropdowns === 'function') updateAllLocationDropdowns();
             
             if(typeof currentTenant !== 'undefined' && currentTenant) {
                 let checkTenant = localDB.tenants[currentTenant.username];
