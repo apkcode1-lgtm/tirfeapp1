@@ -126,6 +126,8 @@ function toggleUnifiedRegForm() {
     } else {
         document.getElementById('unifiedBuyerForm').classList.add('hidden');
         document.getElementById('unifiedTenantForm').classList.remove('hidden');
+        // የንግድ ዘርፎች በ dropdown እንዲጫኑ ጥሪ ማድረግ
+        if (typeof populateAllBizTypeDropdowns === 'function') populateAllBizTypeDropdowns();
     }
 }
 
@@ -135,7 +137,6 @@ function autoFillPubCapitalFee() {
     let feeInput = document.getElementById('pub_newRegistrationFee');
     let tariffs = localDB.tariffs || { low: 500, medium: 1000, high: 2000 };
     let baseFee = 0;
-
     if (capital === 'low') baseFee = tariffs.low;
     else if (capital === 'medium') baseFee = tariffs.medium;
     else if (capital === 'high') baseFee = tariffs.high;
@@ -278,13 +279,15 @@ function triggerUnifiedRegistration() {
         let tradeReg = document.getElementById('pub_newTradeReg').value.trim();
         let mapsLink = document.getElementById('pub_newMapsLink').value.trim();
         let address = document.getElementById('pub_newAddress').value.trim();
-        let businessType = document.getElementById('pub_newBusinessType').value.trim() || 'አጠቃላይ ንግድ';
+        
+        // የንግድ ዘርፍ ማረጋገጫ (Dropdown selection check)
+        let businessType = document.getElementById('pub_newBusinessType').value.trim();
         let capitalTier = document.getElementById('pub_newCapitalTier').value;
         let registrationFee = parseFloat(document.getElementById('pub_newRegistrationFee').value) || 0;
         let contractType = document.getElementById('pub_newContractType').value;
         let expiryDate = document.getElementById('pub_newExpiryDate').value;
         
-        if(!shop || !user || !expiryDate || !fullName || !phone || !newEmail || !region || !zone || !woreda || !kebele || !houseNo || !tinNum || !tradeReg) { 
+        if(!shop || !user || !expiryDate || !fullName || !phone || !newEmail || !region || !zone || !woreda || !kebele || !houseNo || !tinNum || !tradeReg || !businessType) { 
             showCustomAlert("ስህተት", "እባክዎ መሠረታዊ እና አስገዳጅ መረጃዎችን ሙሉ በሙሉ ያሟሉ!");
             return; 
         }
@@ -320,15 +323,12 @@ function triggerUnifiedRegistration() {
                     if (capitalTier === 'low') capitalTierAmh = "ዝቅተኛ (Low)";
                     else if (capitalTier === 'medium') capitalTierAmh = "መካከለኛ (Medium)";
                     else if (capitalTier === 'high') capitalTierAmh = "ከፍተኛ (High)";
-
                     let bankHint = (localDB.adminSettings && localDB.adminSettings.bankAccount) ? `\n\n🏦 የክፍያ ማረጋገጫ (ባንክ): ${localDB.adminSettings.bankAccount}` : "";
-                    
                     let tgMsg = `🔔 አዲስ ተከራይ በራሱ ተመዝግቧል!\n\n👤 የተከራይ ስም: ${fullName}\n🔑 ዩዘርኔም: ${user}\n📧 ኢሜል (Gmail): ${newEmail}\n📞 ስልክ: ${phone}\n💰 የካፒታል መጠን: ${capitalTierAmh}\n🏢 የንግድ ዘርፍ: ${businessType}${bankHint}`;
                     sendAdminTelegramAlert(tgMsg);
                     
                     let adminBankInfo = (localDB.adminSettings && localDB.adminSettings.bankAccount) ? localDB.adminSettings.bankAccount : "አልተሞላም";
                     let successMsg = `ሱቅዎ በተሳካ ሁኔታ ተመዝግቧል!\n\nእባክዎ ክፍያዎን በሚከተለው የባንክ ሂሳብ ቁጥር ይፈፅሙ፦\n🏦 ሂሳብ ቁጥር: ${adminBankInfo}\n💵 የሚከፈል መጠን: ${registrationFee} ETB\n\nክፍያው እንደተረጋገጠ አከራዩ አካውንትዎን ሙሉ በሙሉ ይከፍተዋል።`;
-                    
                     showCustomAlert("✅ ተሳክቷል", successMsg);
                     switchView('welcomeGateway');
                 };
@@ -393,6 +393,7 @@ window.resendOTP = function() {
     showCustomAlert("✅ ተልኳል", "አዲስ ማረጋገጫ ኮድ ተልኳል።");
     setTimeout(() => { alert(`[ማሳሰቢያ]: አዲሱ የኢሜል ኮድዎ: ${emailVerificationCode} ነው!`); }, 500);
 };
+
 function verifyEmailCodeSubmit() {
     let enteredCode = "";
     for(let i=1; i<=5; i++) { enteredCode += document.getElementById('code'+i).value;
@@ -461,7 +462,8 @@ function checkMonthlyAccessReset() {
     if (!currentTenant || !currentTenant.data) return;
     let now = new Date(); let currentTimestamp = now.getTime();
     if (!currentTenant.data.lastMonthlyResetDate) {
-        currentTenant.data.lastMonthlyResetDate = currentTenant.codeCreatedAt || currentTimestamp;
+        currentTenant.data.lastMonthlyResetDate = currentTenant.codeCreatedAt ||
+        currentTimestamp;
         saveAndRefresh(); return;
     }
     
@@ -687,7 +689,7 @@ function renderBuyerCatalog() {
                     <div class="shop-card-header">
                         <img src="${shopLogo}" class="shop-avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/869/869636.png'">
                         <div class="shop-meta">
-                            <h3>${t.shopName}</h3>
+                             <h3>${t.shopName}</h3>
                             <p>📍 አድራሻ፡ ${t.address || 'ያልተገለጸ'} <br><span style="color:var(--accent-color); font-size:0.75rem;">[${tBType}]</span></p>
                         </div>
                     </div>
@@ -729,7 +731,7 @@ function renderBuyerCatalog() {
                 container.innerHTML += shopCardHTML;
 
                 if(liveBuyer && t.data && t.data.deliveryOrders) {
-                       t.data.deliveryOrders.forEach(ord => {
+                    t.data.deliveryOrders.forEach(ord => {
                         if(ord.buyerUser === liveBuyer.username) {
                             let st = ord.status;
                             let badge = st === "pending" ? "በመጠባበቅ ላይ" : (st === "accepted" ? "በመንገድ ላይ" : (st === "completed" ? "ተረክበዋል" : "ተመልሷል"));
@@ -859,7 +861,8 @@ function configureBank() {
         { id: "telegramToken", label: "የቴሌግራም ቦት ቶከን (Telegram Bot Token)", type: "text", placeholder: "Token...", defaultValue: currentTenant.telegramToken || "" },
         { id: "telegramChatId", label: "የቴሌግራም ቻት ID (Telegram Chat ID)", type: "text", placeholder: "Chat ID...", defaultValue: currentTenant.telegramChatId || "" },
         { id: "bankAccountNumber", label: "የባንክ ሂሳብ ቁጥር (CBE/Telebirr)", type: "text", placeholder: "የባንክ ቁጥር...", defaultValue: currentTenant.bankAccount || "" }
-    ], (res) => {
+    ], (res) => 
+    {
         currentTenant.telegramToken = res.telegramToken.trim(); currentTenant.telegramChatId = res.telegramChatId.trim(); currentTenant.bankAccount = res.bankAccountNumber.trim();
         saveAndRefresh(); showCustomAlert("ተሳክቷል", "የማያያዣ መቼቶች በተሳካ ሁኔታ ተቀምጠዋል!");
     });
