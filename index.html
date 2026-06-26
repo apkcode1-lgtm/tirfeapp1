@@ -18,7 +18,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://smtpjs.com/v3/smtp.js"></script>
 </head>
@@ -74,7 +73,6 @@
         <div id="unifiedBuyerForm" style="text-align: left;">
             <input type="text" id="pubBuyerName" placeholder="ሙሉ ስም (Full Name)">
             <input type="email" id="pubBuyerEmail" placeholder="ኢሜል (Gmail)">
-        
             <input type="tel" id="pubBuyerPhone" placeholder="ስልክ ቁጥር (ግዴታ 10 አሃዝ)" pattern="[0-9]{10}" maxlength="10">
             <input type="text" id="pubBuyerUser" placeholder="የመግቢያ ስም (Username)">
         </div>
@@ -85,14 +83,12 @@
             <input type="text" id="pub_newUsername" placeholder="መግቢያ ስም (Username) (ግዴታ)">
             <input type="email" id="pub_newEmail" placeholder="ኢሜል አድራሻ (ግዴታ)">
             <input type="tel" id="pub_newPhone" placeholder="ስልክ ቁጥር (10 አሃዝ) (ግዴታ)" maxlength="10">
-  
             <input type="text" id="pub_newTelegram" placeholder="የቴሌግራም መግቢያ (አማራጭ)">
             
             <select id="pub_newRegion" onchange="handleRegionChange('pub_newRegion', 'pub_newZone', 'pub_newWoreda')">
                 <option value="">-- ክልል ይምረጡ --</option>
             </select>
             <select id="pub_newZone" onchange="handleZoneChange('pub_newRegion', 'pub_newZone', 'pub_newWoreda')">
-         
                 <option value="">-- መጀመሪያ ክልል ይምረጡ --</option>
             </select>
             <select id="pub_newWoreda">
@@ -100,13 +96,11 @@
             </select>
             
             <input type="text" id="pub_newKebele" placeholder="ቀበሌ (ግዴታ)">
-  
             <input type="text" id="pub_newHouseNo" placeholder="የቤት ቁጥር (ግዴታ)">
             <input type="text" id="pub_newTin" placeholder="TIN Number (ግዴታ)">
             <input type="text" id="pub_newTradeReg" placeholder="የንግድ ምዝገባ ቁጥር (ግዴታ)" style="grid-column: span 2;">
             <input type="text" id="pub_newMapsLink" placeholder="የሱቅ ጎግል ማፕ ሊንክ (አማራጭ)" style="grid-column: span 2;">
             <input type="text" id="pub_newAddress" placeholder="ያለበት ሀገር / ከተማ / ክልል (አማራጭ)">
-    
             <input type="text" id="pub_newBusinessType" placeholder="የንግድ ዘርፍ (ምሳሌ፡ ኤሌክትሮኒክስ) (ግዴታ)">
             
             <div style="grid-column: span 2; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
@@ -115,7 +109,6 @@
                     <option value="">-- ካፒታል ይምረጡ --</option>
                     <option value="low">ዝቅተኛ (Low)</option>
                     <option value="medium">መካከለኛ (Medium)</option>
-       
                     <option value="high">ከፍተኛ (High)</option>
                 </select>
 
@@ -125,7 +118,6 @@
                     <option value="በዓመት">በዓመት (Yearly)</option>
                 </select>
 
-               
                 <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የውል ማብቂያ ቀን (Expiry Date)፦</label>
                 <input type="date" id="pub_newExpiryDate" required>
                 
@@ -166,7 +158,6 @@
                 </table>
             </div>
             <div class="cart-total-bar">
-               
                 አጠቃላይ ሂሳብ: <span id="buyerCartTotalSum" style="color: var(--success-color);">0</span> ብር
             </div>
             <button class="btn-sell btn-block" style="background-color: #f59e0b; color: #000; font-size: 1.1rem; border-radius: 8px;" onclick="checkoutBuyerCart()">✅ እርግጠኛ ነኝ ትዕዛዙን ወደ ሱቆች ላክ</button>
@@ -176,7 +167,6 @@
             <h2>📦 የጠየቋቸው ትዕዛዞች (Orders) እና ደረሰኞች</h2>
             <div class="table-responsive">
                 <table>
-                 
                     <thead><tr><th>የሱቅ ስም</th><th>ዕቃና ብዛት</th><th>ዋጋ</th><th>ቀን</th><th>ሁኔታ</th></tr></thead>
                     <tbody id="buyerOrdersBody"></tbody>
                 </table>
@@ -193,7 +183,6 @@
             <div class="table-responsive" style="margin-top: 10px;">
                 <table>
                     <thead><tr><th>ደረሰኝ ID</th><th>ቀን</th><th>ዕቃ (ብዛት)</th><th>የተከፈለ</th><th>እርምጃ</th></tr></thead>
-               
                     <tbody id="buyerReceiptsBody"></tbody>
                 </table>
             </div>
@@ -212,7 +201,6 @@
             </div>
             <div id="buyerCategoryContainer" class="category-filters"></div>
             <div id="buyerShopsContainer" class="shops-grid"></div>
-   
         </section>
     </section>
 
@@ -228,19 +216,16 @@
                 <div class="card" style="border-left: 4px solid var(--accent-color);">
                     <h3>ጠቅላላ ተከራዮች</h3>
                     <p id="adminTotalTenants">0</p>
-  
                 </div>
                 <div class="card" style="border-left: 4px solid var(--success-color);">
                     <h3>ንቁ ተከራዮች</h3>
                     <p id="adminActiveTenants">0</p>
                 </div>
-       
                 <div class="card" style="border-left: 4px solid var(--warning-color);">
                     <h3>ጠቅላላ የተሰበሰበ ክፍያ</h3>
                     <p id="adminTotalFees">0.00 ETB</p>
                 </div>
                 <div class="card" style="border-left: 4px solid var(--purple-color);">
-     
                     <h3>የገዥዎች ቆጠራ (Buyers)</h3>
                     <p id="adminTotalBuyers">0</p>
                     <button class="btn-config btn-sm" style="margin-top:8px; width:100%; font-size:0.8rem;" onclick="toggleAdminBuyersView()">ገዦችን በዝርዝር እይ</button>
@@ -263,22 +248,18 @@
                     <input type="text" id="newShopName" placeholder="የሱቅ ስም (ምሳሌ፡ አልፋ) (ግዴታ)">
                     <input type="text" id="newFullName" placeholder="የተከራይ ሙሉ ስም (ግዴታ)">
                     <input type="text" id="newUsername" placeholder="መግቢያ ስም (Username) (ግዴታ)">
-             
                     <input type="email" id="newEmail" placeholder="ኢሜል አድራሻ (ግዴታ)">
                     <input type="tel" id="newPhone" placeholder="ስልክ ቁጥር (10 አሃዝ) (ግዴታ)" maxlength="10">
                     <input type="text" id="newTelegram" placeholder="የቴሌግራም መግቢያ (አማራጭ)">
                     
-               
                     <select id="newRegion" onchange="handleRegionChange('newRegion', 'newZone', 'newWoreda')">
                         <option value="">-- ክልል ይምረጡ --</option>
                     </select>
                     <select id="newZone" onchange="handleZoneChange('newRegion', 'newZone', 'newWoreda')">
-                   
                         <option value="">-- መጀመሪያ ክልል ይምረጡ --</option>
                     </select>
                     <select id="newWoreda">
                         <option value="">-- መጀመሪያ ዞን ይምረጡ --</option>
-                    
                     </select>
 
                     <input type="text" id="newKebele" placeholder="ቀበሌ (ግዴታ)">
@@ -288,24 +269,20 @@
                     <input type="text" id="newMapsLink" placeholder="የሱቅ ጎግል ማፕ ሊንክ (አማራጭ)" style="grid-column: span 2;">
                     <input type="text" id="newAddress" placeholder="ያለበት ሀገር / ከተማ / ክልል (አማራጭ)">
                     <input type="text" id="newBusinessType" placeholder="የንግድ ዘርፍ (ምሳሌ፡ ኤሌክትሮኒክስ) (ግዴታ)">
-           
                     
                     <div style="grid-column: span 2; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px;">
                         <label style="color: var(--accent-color); font-size: 0.85rem; display:block;">የንግድ ካፒታል መጠን (የኪራይ መቁረጫ ምድብ):</label>
                         <select id="newCapitalTier" onchange="autoFillCapitalFee()">
                             <option value="">-- ካፒታል ይምረጡ --</option>
                             <option value="low">ዝቅተኛ (Low)</option>
-     
                             <option value="medium">መካከለኛ (Medium)</option>
                             <option value="high">ከፍተኛ (High)</option>
                         </select>
 
-                     
                         <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የውል ዓይነት (Contract Type)፦</label>
                         <select id="newContractType">
                             <option value="በወር">በወር (Monthly)</option>
                             <option value="በዓመት">በዓመት (Yearly)</option>
-  
                         </select>
 
                         <label style="font-size: 0.85rem; color: var(--accent-color); display:block; margin-top: 8px;">የውል ማብቂያ ቀን (Expiry Date)፦</label>
@@ -316,7 +293,6 @@
                     </div>
 
                     <div style="grid-column: span 2;">
-                   
                         <label style="color: var(--accent-color); font-size: 0.85rem; margin-top:10px; display:block;">የሱቅ ፕሮፋይል ፎቶ (አማራጭ)፡</label>
                         <input type="file" id="newShopLogoFile" accept="image/*">
                     </div>
@@ -327,32 +303,26 @@
             <section class="section-box hidden" id="adminTenantsSection">
                 <h2>📈 የተከራዮች ሁኔታ እና የውል መቆጣጠሪያ</h2>
                 <div class="search-container">
-         
                     <input type="text" id="adminSearchInput" class="search-input" placeholder="🔍 ተከራይን በዩዘርኔም (Username) ብቻ በቀላሉ ለመፈለግ..." oninput="renderAdminPanel()">
                 </div>
                 <div class="table-responsive">
                     <table>
                         <thead>
- 
                             <tr>
                                 <th>የሱቅ ስም / ዘርፍ / ካፒታል</th>
                                 <th>የተከራይ መገለጫ (Profile)</th>
-  
                                 <th>የመግቢያ ዝርዝር / ኮድ</th>
                                 <th>የውል ዓይነት / ክፍያ</th>
-                                
                                 <th>የማብቂያ ቀን</th>
                                 <th>የአሁን ሁኔታ</th>
                                 <th>እርምጃዎች</th>
                             </tr>
-      
                         </thead>
                         <tbody id="tenantTableBody"></tbody>
                     </table>
                 </div>
             </section>
 
-         
             <section class="section-box" style="border-color: #f59e0b;">
                 <h2 style="color: #f59e0b;">📧 የኢሜል ማዋቀሪያ (Email SMTP Settings)</h2>
                 <p style="font-size: 0.85rem; color:#94a3b8; margin-bottom:10px;">ሲስተሙ የኢሜል ማረጋገጫ ኮድ ሲልክ የሚጠቀምበት ማዋቀሪያ</p>
@@ -361,7 +331,6 @@
                     <input type="password" id="adminAppPassConfig" placeholder="Google App Password (ባለ 16 አሃዝ)">
                 </div>
                 <button class="btn-sell btn-block" style="margin-top: 10px;" onclick="saveAdminEmailSettings()">💾 ሲቲንግ አስቀምጥ</button>
-   
             </section>
             
             <section class="section-box" style="border-color: var(--accent-color); margin-top: 20px;">
@@ -371,7 +340,6 @@
                     <input type="text" id="adminTgToken" placeholder="የቴሌግራም ቦት ቶከን (Bot Token)">
                     <input type="text" id="adminTgChatId" placeholder="የቴሌግራም ቻት አይዲ (Chat ID)">
                     <input type="text" id="adminBankInfo" placeholder="የአከራይ የባንክ መረጃ / ሂሳብ ቁጥር" style="grid-column: span 2;">
-           
                 </div>
                 <button class="btn-sell btn-block" style="margin-top: 10px; background-color: var(--accent-color);" onclick="saveAdminSystemSettings()">💾 ቴሌግራም እና ባንክ ሲቲንግ አስቀምጥ</button>
             </section>
@@ -382,7 +350,6 @@
             <button class="btn-config btn-sm" style="margin-bottom:15px;" onclick="toggleAdminBuyersView()">⬅️ ወደ ዳሽቦርድ ተመለስ</button>
             <h2 style="color: var(--purple-color);">👥 የገዥዎች ዝርዝር እና መቆጣጠሪያ</h2>
             <div class="table-responsive">
- 
                 <table>
                     <thead><tr><th>ገዥ (Username)</th><th>ስልክ ቁጥር</th><th>ሁኔታ</th><th>እርምጃ</th></tr></thead>
                     <tbody id="adminBuyersTableBody"></tbody>
@@ -390,14 +357,12 @@
             </div>
         </section>
 
-      
         <section class="section-box hidden" id="adminRevenueSection" style="border-color: #8b5cf6;">
             <button class="btn-config btn-sm" style="margin-bottom:15px;" onclick="toggleAdminRevenueView()">⬅️ ወደ ዳሽቦርድ ተመለስ</button>
             <h2 style="color: #8b5cf6;">🏛️ የገቢዎች ባለስልጣን (Revenue Officers) ዝርዝር</h2>
             <div class="table-responsive">
                 <table>
                     <thead><tr><th>ስም / ዩዘርኔም</th><th>ስልክ / ኢሜል</th><th>ምድብ (ክልል/ዞን/ወረዳ)</th><th>እርምጃ</th></tr></thead>
- 
                     <tbody id="adminRevenueTableBody"></tbody>
                 </table>
             </div>
@@ -408,7 +373,6 @@
     <section id="revenuePage" class="hidden">
         <header class="welcome-header">
             <h1>🏛️ የገቢዎች ባለስልጣን ማዕከላዊ ሲስተም</h1>
-         
             <p id="revenueOfficerProfile" style="color: var(--accent-color); margin-top: 5px; font-weight: bold;"></p>
             <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
                 <button class="btn-config" style="background-color: var(--purple-color); color: white;" onclick="document.getElementById('revenueProfileSettingsCard').classList.toggle('hidden')">⚙️ የፕሮፋይል ሲቲንግ (Profile Settings)</button>
@@ -432,7 +396,6 @@
                 <h3>በየወሩ የሚሰበሰበው ጠቅላላ ቫት</h3>
                 <p id="revenueMonthlyVatSum" style="color: var(--accent-color);">0.00 ETB</p>
             </div>
-        
             <div class="card" style="border-left: 4px solid var(--success-color);">
                 <h3>የአመት አጠቃላይ የቫት ድምር (የወራት ድምር)</h3>
                 <p id="revenueAnnualVatSum" style="color: var(--success-color);">0.00 ETB</p>
@@ -450,22 +413,18 @@
                 <table>
                     <thead>
                         <tr>
-        
                             <th>የተከራይ ሙሉ ስም (የሱቅ ስም)</th>
                             <th>ስልክ ቁጥር</th>
                             <th>ክልል / ዞን / ወረዳ</th>
-               
                             <th>ቀበሌ / የቤት ቁ.</th>
                             <th>TIN Number</th>
                             <th style="color: var(--warning-color);">የተሰበሰበ የቫት መጠን</th>
-                       
                             <th>እርምጃ</th>
                         </tr>
                     </thead>
                     <tbody id="revenueTenantsBody"></tbody>
                 </table>
             </div>
-  
         </section>
     </section>
 
@@ -499,7 +458,6 @@
                 <h3>የአሁን ካፒታል (ዕቃ ላይ)</h3>
                 <p id="totalCapital" style="color: var(--accent-color);">0.00</p>
             </div>
-            
             <div class="card">
                 <h3>የዛሬ ትርፍ</h3>
                 <p id="todayNetProfit">0.00</p>
@@ -507,7 +465,6 @@
             <div class="card">
                 <h3>የወር ትርፍ</h3>
                 <p id="monthlyNetProfit" style="color: var(--warning-color);">0.00</p>
-    
             </div>
             <div class="card">
                 <h3>የዚህ ወር ወጪ</h3>
@@ -521,21 +478,18 @@
                 <h3>የተመዘገቡ ገዥዎች</h3>
                 <p id="sellerTotalBuyers" style="color: #a855f7;">0</p>
             </div>
-    
             <div class="card" style="border-left: 4px solid #f59e0b;">
                 <h3>የወር ኪራይ (Rent)</h3>
                 <p id="tenantRentDisplay" style="color: #f59e0b;">0.00</p>
             </div>
             <div class="card" style="border-left: 4px solid #ef4444;">
                 <h3>የቫት (VAT) መጠን</h3>
-   
                 <p id="tenantVatDisplay" style="color: #ef4444;">0.00 ETB</p>
             </div>
             <div class="card" style="border-left: 4px solid #10b981;">
                 <h3>ጠቅላላ የተሰበሰበ የቫት ድምር</h3>
                 <p id="tenantAccumulatedVatDisplay" style="color: #10b981;">0.00 ETB</p>
             </div>
-   
         </section>
 
         <section class="dashboard" style="margin-top:-10px;">
@@ -569,19 +523,19 @@
                 <h2 style="color: #ef4444; margin: 0;">🧾 የቫት ደረሰኝ መቁረጫ ማዕከል</h2>
                 <div id="vatReceiptDateDisplay" style="background: rgba(239, 68, 68, 0.2); padding: 5px 12px; border-radius: 6px; font-weight: bold; color: #f87171;">ቀን፦ <span id="vatCurrentDateSpan">--/--/----</span></div>
             </div>
-            <p style="font-size: 0.85rem; color: #94a3b8;">እቃ በሚሸጥበት ጊዜ ሲስተሙ በራስ-ሰር ቫት ይቆርጣል። በተጨማሪም እዚህ ገጽ ላይ ለደንበኛ የተለየ የቫት ደረሰኝ ማመንጨት ይችላሉ።</p>
+            <p style="font-size: 0.85rem; color: #94a3b8;">ይህ የተዘጋጀው ለአነስተኛ ዕቃዎች ክፍያ (ከ3000 ብር በታች) ማስተናገጃ ነው። የብር መጠኑ ከዚህ በላይ ከሆነ መደበኛውን ካርት (Cart) ይጠቀሙ።</p>
             
             <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-top: 10px;">
-                <h3 style="font-size: 1rem; color: var(--accent-color); margin-bottom: 10px;">📄 ለደንበኛ የተለየ ደረሰኝ ማዘጋጃ</h3>
+                <h3 style="font-size: 1rem; color: var(--accent-color); margin-bottom: 10px;">📄 የፈጣን ቫት ደረሰኝ ማዘጋጃ</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <input type="text" id="specialVatCustomerName" placeholder="የደንበኛ ሙሉ ስም">
-                    <input type="text" id="specialVatCustomerTin" placeholder="የደንበኛ TIN ቁጥር (ካለው)">
-                    <input type="text" id="specialVatItemName" placeholder="የምርት/ዕቃ ስም">
-                    <input type="number" id="specialVatItemQty" placeholder="ብዛት">
-                    <input type="number" id="specialVatItemPrice" placeholder="ዋጋ (ያለ ቫት)">
-                    <input type="number" id="specialVatPercent" placeholder="የቫት ፐርሰንት (ምሳሌ፡ 15)" value="15">
+                    <input type="text" id="specialVatCustomerName" placeholder="የገዥ ስም (Customer Name)">
+                    <input type="text" id="specialVatItemName" placeholder="የዕቃው ስም">
+                    <input type="text" id="specialVatItemModel" placeholder="የዕቃው ሞዴል (ካለው)">
+                    <input type="number" id="specialVatItemPrice" placeholder="የዕቃው ዋጋ ያለ ቫት (ከ3000 በታች)" oninput="validateQuickVatPrice()">
+                    <input type="text" id="specialVatPercentDisplay" placeholder="የቫት ፐርሰንት" readonly style="background: rgba(255,255,255,0.1); color: var(--accent-color); font-weight: bold; cursor: not-allowed;">
                 </div>
-                <button class="btn-sell btn-block" style="margin-top: 12px; background-color: #ef4444;" onclick="generateStandaloneVatReceipt()">👉 የቫት ደረሰኝ አውጣ</button>
+                <p id="quickVatWarning" style="color: var(--danger-color); font-size: 0.85rem; font-weight: bold; margin-top: 5px; display: none;">⚠️ የብር መጠኑ ከ3000 እና ከዚያ በላይ ስለሆነ እባክዎ መደበኛውን ካርት (Cart) ይጠቀሙ!</p>
+                <button id="btnQuickVatSubmit" class="btn-sell btn-block" style="margin-top: 12px; background-color: #ef4444;" onclick="generateStandaloneVatReceipt()">👉 የቫት ደረሰኝ አውጣ</button>
             </div>
         </section>
 
@@ -589,7 +543,6 @@
             <h2 style="color:var(--warning-color);">🛒 የገዥዎች Cart (Online Orders)</h2>
             <div class="table-responsive">
                 <table>
-                   
                     <thead><tr><th>ገዥ (Username)</th><th>የታዘዙ ዕቃዎች (አይነት፣ ሞዴል፣ ብዛት)</th><th>የሚጠበቅ ሂሳብ</th><th>እርምጃ</th></tr></thead>
                     <tbody id="sellerRemoteCartsBody"></tbody>
                 </table>
@@ -597,15 +550,13 @@
         </section>
 
         <section class="section-box" id="deliverySection">
-            <h2>🚚 የዴሊቨሪ ትዕዛዞች (Delivery Orders)</h2>
-          
+             <h2>🚚 የዴሊቨሪ ትዕዛዞች (Delivery Orders)</h2>
             <div class="table-responsive">
                 <table>
                     <thead><tr><th>ገዥ (ስልክ)</th><th>አድራሻ/ማፕ</th><th>የታዘዘ ዕቃ (ሞዴል እና ብዛት)</th><th>የታሰበ ሂሳብ</th><th>ሁኔታ</th><th>እርምጃ</th></tr></thead>
                     <tbody id="sellerDeliveryBody"></tbody>
                 </table>
             </div>
-      
         </section>
 
         <section class="section-box">
@@ -620,14 +571,12 @@
                     <input type="number" id="itemPrice" placeholder="መሸጫ ዋጋ">
                     <input type="number" id="itemQty" placeholder="የመጣው ብዛት">
                 </div>
-    
                 <label style="font-size:0.85rem; color:var(--accent-color);">የዕቃው ፎቶ ከጋላሪ ይምረጡ (አማራጭ)፡</label>
                 <input type="file" id="itemImgFile" accept="image/*">
                 <button class="btn-sell btn-block" style="margin-top: 8px;" onclick="addItemDirectly()">📥 መደበኛ ዕቃውን በዝርዝር አስገባ</button>
             </div>
             
             <div id="cartSection" class="cart-section">
-              
                 <h3 class="cart-header">🛒 የ Cart ማከማቻ (የተመረጡ እቃዎች)</h3>
                 <p id="emptyCartMsg" class="cart-empty-text">ምንም እቃ አልተመረጠም:: ከታች ካለው ቴብል እቃ ይምረጡ::</p>
                 <div id="cartItemsList"></div>
@@ -645,13 +594,11 @@
                 <input type="text" id="inventorySearchInput" class="search-input" placeholder="🔍 የዕቃ ስም በመጻፍ በፍጥነት ይፈልጉ..." oninput="renderApp()">
             </div>
             <div class="table-responsive">
-             
                 <table>
                     <thead>
                         <tr id="inventoryTableHeader"></tr>
                     </thead>
                     <tbody id="inventoryBody"></tbody>
-           
                 </table>
             </div>
         </section>
@@ -665,22 +612,18 @@
             <div class="table-responsive">
                 <table>
                     <thead>
-              
                         <tr>
                             <th>ደረሰኝ ID</th>
                             <th>ቀን</th>
                             <th>የዕቃ ስም</th>
-    
                             <th>ብዛት</th>
                             <th>ጠቅላላ ዋጋ</th>
                             <th>የሸጠው ሰው</th>
-                  
                             <th>እርምጃ</th>
                         </tr>
                     </thead>
                     <tbody id="receiptHistoryTableBody"></tbody>
                 </table>
-         
             </div>
         </section>
 
@@ -695,7 +638,7 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>የደረሰኝ ቁ. / ቀን</th>
+                             <th>የደረሰኝ ቁ. / ቀን</th>
                             <th>የክፍያ ምክንያት</th>
                             <th>የተከፈለ መጠን</th>
                             <th>የባለስልጣኑ ስም / ስልክ</th>
@@ -713,20 +656,17 @@
                 <h2>💳 የዕዳ መዝገብ</h2>
                 <div class="table-responsive">
                     <table>
-            
                         <tbody id="creditBody"></tbody>
                     </table>
                 </div>
             </section>
             <section class="section-box">
                 <h2>💸 ከሳጥን የተነሳ ገንዘብ / መልስ</h2>
-     
                 <div class="table-responsive">
                     <table>
                         <tbody id="drawBody"></tbody>
                     </table>
                 </div>
-       
             </section>
             <section class="section-box" id="historySection">
                 <h2>📅 የቀደሙ ቀናት ታሪክ እና ማህደር</h2>
@@ -736,7 +676,6 @@
                 </div>
                 <div class="table-responsive">
                     <table>
-                    
                         <tbody id="historyBody"></tbody>
                     </table>
                 </div>
@@ -746,14 +685,12 @@
         <section class="section-box">
             <h2>⚙️ መቼቶች እና ሲስተም መውጫ</h2>
             <div class="profile-data">
- 
                 <label>የመተግበሪያ ገጽታ (Theme)፦</label> 
                 <select id="themeSelector" onchange="changeTheme(this.value)" style="width: auto; margin: 0; padding: 4px 8px;">
                     <option value="theme-deepblue">Deep Blue</option>
                     <option value="theme-emerald">Emerald Green</option>
                     <option value="theme-purple">Royal Purple</option>
                     <option value="theme-charcoal">Charcoal Dark</option>
-        
                 </select>
             </div>
             <button class="btn-expense btn-block" style="margin-top: 20px; padding: 15px;" onclick="logout()">🚪 ከአፑ በሰላም ውጣ (Logout)</button>
@@ -780,7 +717,6 @@
     <div id="qrScannerModal" class="modal-card hidden" style="max-width: 400px;">
         <div class="modal-header"><h3 class="text-success">📷 የሻጭ QR ስካን ማድረጊያ</h3></div>
         <div class="modal-body">
- 
             <div id="qr-reader" style="width:100%; border-radius: 8px; overflow: hidden; border: 2px solid #10b981;"></div>
             <p style="text-align:center; color:#94a3b8; font-size:0.85rem; margin-top:15px;">ካሜራዎን ወደ ሻጩ QR ኮድ ያዞሩ። ሲስተሙ በራሱ ያነበዋል።</p>
         </div>
@@ -800,7 +736,6 @@
             <button class="btn-expense" onclick="closeActiveModal()">ሰርዝ</button>
             <button class="btn-sell" onclick="saveAllStaff()">💾 መዝግብ</button>
         </div>
-   
     </div>
 
     <div id="emailVerifyModal" class="modal-card hidden" style="text-align: center; max-width: 400px;">
@@ -832,7 +767,6 @@
         <div class="modal-header"><h3 id="confirmTitle" class="text-danger">እርግጠኛ ኖት?</h3></div>
         <div class="modal-body"><p id="confirmMessage"></p></div>
         <div class="modal-footer">
-          
             <button class="btn-expense" id="confirmYesBtn">አዎ</button>
             <button class="btn-add" onclick="closeActiveModal()">አይ</button>
         </div>
@@ -853,7 +787,7 @@
             <button class="btn-sell btn-block" style="background-color: #10b981; color: black;" onclick="window.print()">🖨️ አትም (Print)</button>
         </div>
     </div>
-    </div>
+</div>
 
 <div id="specialVatReceiptModal" class="modal-overlay hidden" style="z-index: 9999999 !important;">
     <div class="modal-card" style="max-width: 550px; background: #ffffff; color: #000000; padding: 25px; border-radius: 8px; font-family: 'Courier New', Courier, monospace; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
@@ -861,6 +795,7 @@
             <div style="text-align: center; border-bottom: 2px dashed #000000; padding-bottom: 12px; margin-bottom: 12px;">
                 <h2 id="recPrintShopName" style="margin: 0; font-size: 1.5rem; font-weight: bold; text-transform: uppercase; color: #000;">- የሱቅ ስም -</h2>
                 <p style="margin: 4px 0; font-size: 0.95rem; font-weight: bold;">ሕጋዊ የቫት (VAT) ሽያጭ ደረሰኝ</p>
+                <div style="display:inline-block; border: 1px solid #000; padding: 2px 8px; font-weight: bold; font-size: 0.8rem; margin: 4px 0;">* ፈጣን የቫት ደረሰኝ *</div>
                 <p style="margin: 2px 0; font-size: 0.75rem; color: #222;">በኢትዮጵያ ገቢዎች ባለስልጣን ቁጥጥር ስር የተዘጋጀ ሲስተም</p>
             </div>
             
@@ -870,7 +805,6 @@
                 <div><strong>TIN ቁጥር:</strong> <span id="recPrintTin">-</span></div>
                 <div><strong>የንግድ ምዝገባ ቁ:</strong> <span id="recPrintTradeReg">-</span></div>
                 <div><strong>ስልክ ቁጥር:</strong> <span id="recPrintPhone">-</span></div>
-  
                 <div><strong>ኢሜል አድራሻ:</strong> <span id="recPrintEmail">-</span></div>
                 <div style="grid-column: span 2;"><strong>የሱቅ አድራሻ:</strong> ክልል: <span id="recPrintRegion">-</span>, ዞን: <span id="recPrintZone">-</span>, ወረዳ: <span id="recPrintWoreda">-</span>, ቀበሌ: <span id="recPrintKebele">-</span>, የቤት ቁ: <span id="recPrintHouseNo">-</span></div>
             </div>
@@ -882,7 +816,6 @@
                 <div><strong>የደረሰኝ መለያ ID:</strong> <span id="recPrintReceiptId">-</span></div>
             </div>
 
-  
             <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; color: #000;">
                 <thead>
                     <tr style="border-bottom: 1px solid #000; border-top: 1px solid #000; text-align: left;">
