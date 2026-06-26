@@ -1,4 +1,4 @@
-let localDB = { tenants: {}, buyers: {}, revenueAuthorities: {}, taxReceipts: [], adminSettings: { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' }, tariffs: { low: 500, medium: 1000, high: 2000 } };
+let localDB = { tenants: {}, buyers: {}, revenueAuthorities: {}, taxReceipts: [], adminSettings: { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' }, tariffs: { low: 500, medium: 1000, high: 2000 }, businessTypes: ["አጠቃላይ ንግድ", "ኤሌክትሮኒክስ", "ፋርማሲ", "ልብስ እና ጫማ", "ግሮሰሪ", "ኮስሞቲክስ", "ካፌ እና ሬስቶራንት"] };
 let isOnline = true;
 
 window.addEventListener('online', handleOnlineStatus);
@@ -11,7 +11,6 @@ function handleOnlineStatus() {
     isOnline = navigator.onLine;
     const tag = document.getElementById('syncIndicator');
     const criticalScreen = document.getElementById('criticalOfflineScreen');
-
     if(!isOnline) {
         if(tag) tag.classList.remove('hidden');
         if(criticalScreen) criticalScreen.classList.remove('hidden');
@@ -30,10 +29,12 @@ function loadLocalStorageBackup() {
         if(!localDB.revenueAuthorities) localDB.revenueAuthorities = {};
         if(!localDB.taxReceipts) localDB.taxReceipts = [];
         if(!localDB.tariffs) localDB.tariffs = { low: 500, medium: 1000, high: 2000 };
+        if(!localDB.businessTypes) localDB.businessTypes = ["አጠቃላይ ንግድ", "ኤሌክትሮኒክስ", "ፋርማሲ", "ልብስ እና ጫማ", "ግሮሰሪ", "ኮስሞቲክስ", "ካፌ እና ሬስቶራንት"];
         if(!localDB.adminSettings) localDB.adminSettings = { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' };
         
-        // ዳታው ሲጫን የክልል/ዞን ምርጫዎችን አፕዴት ያድርግ
+        // ዳታው ሲጫን የክልል/ዞን እና የንግድ ዘርፍ ምርጫዎችን አፕዴት ያድርግ
         if(typeof updateAllLocationDropdowns === 'function') updateAllLocationDropdowns();
+        if(typeof populateAllBizTypeDropdowns === 'function') populateAllBizTypeDropdowns();
     }
 }
 
@@ -55,7 +56,6 @@ function sendAdminTelegramAlert(message) {
     const token = String(localDB.adminSettings.tgToken).trim();
     const chatId = String(localDB.adminSettings.tgChatId).trim();
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
-
     fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -69,7 +69,6 @@ function sendTelegramAlert(message) {
     const token = String(currentTenant.telegramToken).trim();
     const chatId = String(currentTenant.telegramChatId).trim();
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
-
     fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -86,12 +85,14 @@ if(typeof db !== 'undefined') {
             if(!localDB.revenueAuthorities) localDB.revenueAuthorities = {};
             if(!localDB.taxReceipts) localDB.taxReceipts = [];
             if(!localDB.tariffs) localDB.tariffs = { low: 500, medium: 1000, high: 2000 };
+            if(!localDB.businessTypes) localDB.businessTypes = ["አጠቃላይ ንግድ", "ኤሌክትሮኒክስ", "ፋርማሲ", "ልብስ እና ጫማ", "ግሮሰሪ", "ኮስሞቲክስ", "ካፌ እና ሬስቶራንት"];
             if(!localDB.adminSettings) localDB.adminSettings = { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' };
             
             saveToLocalStorage();
             
-            // የገቢዎች ዳታ ከፋየርቤዝ አዲስ ሲገባ የክልል/ዞን ምርጫዎችም በራሳቸው አፕዴት ይሁኑ
+            // የገቢዎች ዳታ እና የንግድ ዘርፎች ከፋየርቤዝ አዲስ ሲገባ አፕዴት ይሁኑ
             if(typeof updateAllLocationDropdowns === 'function') updateAllLocationDropdowns();
+            if(typeof populateAllBizTypeDropdowns === 'function') populateAllBizTypeDropdowns();
             
             if(typeof currentTenant !== 'undefined' && currentTenant) {
                 let checkTenant = localDB.tenants[currentTenant.username];
