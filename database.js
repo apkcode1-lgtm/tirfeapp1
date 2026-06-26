@@ -1,4 +1,4 @@
-let localDB = { tenants: {}, buyers: {}, revenueAuthorities: {}, adminSettings: { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' }, tariffs: { low: 500, medium: 1000, high: 2000 } };
+let localDB = { tenants: {}, buyers: {}, revenueAuthorities: {}, taxReceipts: [], adminSettings: { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' }, tariffs: { low: 500, medium: 1000, high: 2000 } };
 let isOnline = true;
 
 window.addEventListener('online', handleOnlineStatus);
@@ -11,7 +11,7 @@ function handleOnlineStatus() {
     isOnline = navigator.onLine;
     const tag = document.getElementById('syncIndicator');
     const criticalScreen = document.getElementById('criticalOfflineScreen');
-    
+
     if(!isOnline) {
         if(tag) tag.classList.remove('hidden');
         if(criticalScreen) criticalScreen.classList.remove('hidden');
@@ -28,6 +28,7 @@ function loadLocalStorageBackup() {
         localDB = JSON.parse(backup);
         if(!localDB.buyers) localDB.buyers = {};
         if(!localDB.revenueAuthorities) localDB.revenueAuthorities = {};
+        if(!localDB.taxReceipts) localDB.taxReceipts = [];
         if(!localDB.tariffs) localDB.tariffs = { low: 500, medium: 1000, high: 2000 };
         if(!localDB.adminSettings) localDB.adminSettings = { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' };
         
@@ -48,20 +49,32 @@ function pushToFirebase() {
     } 
 }
 
+// ቴሌግራም መልእክት አላላክ - የ URL ርዝመት ችግርን ለመፍታት ወደ POST ተቀይሯል
 function sendAdminTelegramAlert(message) {
     if (!localDB.adminSettings || !localDB.adminSettings.tgToken || !localDB.adminSettings.tgChatId) return;
-    const token = localDB.adminSettings.tgToken;
-    const chatId = localDB.adminSettings.tgChatId;
-    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
-    fetch(url).catch(err => console.log("Admin Telegram Error: ", err));
+    const token = String(localDB.adminSettings.tgToken).trim();
+    const chatId = String(localDB.adminSettings.tgChatId).trim();
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: message })
+    }).catch(err => console.log("Admin Telegram Error: ", err));
 }
 
+// የተከራይ ቴሌግራም መልእክት አላላክ - ረጅም የዕለት ሪፖርትም ሆነ ሂሳብ አሁን አይቋረጥም
 function sendTelegramAlert(message) {
     if (typeof currentTenant === 'undefined' || !currentTenant || !currentTenant.telegramToken || !currentTenant.telegramChatId) return;
-    const token = currentTenant.telegramToken;
-    const chatId = currentTenant.telegramChatId;
-    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
-    fetch(url).catch(err => console.log("Telegram Error: ", err));
+    const token = String(currentTenant.telegramToken).trim();
+    const chatId = String(currentTenant.telegramChatId).trim();
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: message })
+    }).catch(err => console.log("Telegram Error: ", err));
 }
 
 if(typeof db !== 'undefined') {
@@ -71,6 +84,7 @@ if(typeof db !== 'undefined') {
             if(!localDB.tenants) localDB.tenants = {};
             if(!localDB.buyers) localDB.buyers = {};
             if(!localDB.revenueAuthorities) localDB.revenueAuthorities = {};
+            if(!localDB.taxReceipts) localDB.taxReceipts = [];
             if(!localDB.tariffs) localDB.tariffs = { low: 500, medium: 1000, high: 2000 };
             if(!localDB.adminSettings) localDB.adminSettings = { tgToken: '', tgChatId: '', bankAccount: '', vatRate: 0, adminEmail: '', adminAppPass: '' };
             
@@ -84,6 +98,8 @@ if(typeof db !== 'undefined') {
                 if(!checkTenant || checkTenant.status === "blocked") { logout(); return; }
                 currentTenant = checkTenant;
                 if(typeof renderApp === 'function') renderApp();
+                // አዲሱን የግብር ደረሰኝ ማሳያ ሪፍሬሽ ለማድረግ
+                if(typeof renderTenantTaxReceipts === 'function') renderTenantTaxReceipts();
             }
          
             if(typeof currentBuyer !== 'undefined' && currentBuyer) {
