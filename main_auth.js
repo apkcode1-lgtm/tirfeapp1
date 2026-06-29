@@ -1,3 +1,35 @@
+// === የኢንስፔክት መከላከያ (Inspect Blocker) ===
+document.addEventListener('contextmenu', event => event.preventDefault());
+document.addEventListener('keydown', event => {
+    if (event.keyCode === 123) { event.preventDefault(); } // F12
+    if (event.ctrlKey && event.shiftKey && (event.keyCode === 73 || event.keyCode === 74)) { event.preventDefault(); } // Ctrl+Shift+I / J
+    if (event.ctrlKey && event.keyCode === 85) { event.preventDefault(); } // Ctrl+U
+});
+// ===========================================
+
+async function sendSecureVerificationEmail(userEmail, verificationCode) {
+    try {
+        // Vercel ላይ ዴፕሎይ ሲሆን ይህ አድራሻ በቀጥታ api/send-otp.js ን ይጠራል
+        const backendAPIUrl = "/api/send-otp";
+        const response = await fetch(backendAPIUrl, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json' 
+            },
+            body: JSON.stringify({ email: userEmail, code: verificationCode })
+        });
+        const result = await response.json();
+        if(!result.success) {
+            console.error('ኢሜል መላክ አልተሳካም:', result.error);
+            showCustomAlert("ስህተት", "የማረጋገጫ ኮድ ወደ ኢሜል መላክ አልተቻለም! " + (result.error || ""));
+        }
+    } catch (error) {
+        console.error('ከጀርባ አገልጋይ ጋር መገናኘት አልተቻለም:', error);
+        showCustomAlert("ስህተት", "ከሰርቨር (API) ጋር መገናኘት አልተቻለም። እባክዎ አፑን በ Live Server ወይም Vercel ላይ መክፈትዎን ያረጋግጡ።");
+    }
+}
+
 function checkAutomaticLogin() {
     let savedSession = localStorage.getItem('tirfe_active_session');
     if (savedSession) {
@@ -64,9 +96,24 @@ function enableAllActions() {
 
 setInterval(() => { checkTimeLock(); }, 60000);
 
-function isSystemDataTaken(u, p, skipTenantUser, skipBuyerUser) {
+async function isSystemDataTaken(u, p, skipTenantUser, skipBuyerUser) {
     u = u ? u.toLowerCase() : "";
     if (u === "admin") return "ይህ ዩዘርኔም በዋና አስተዳዳሪ (Admin) ተይዟል (ትይዟል)!";
+    if(typeof db !== 'undefined') {
+        try {
+            let tSnap = await db.ref(`tirfe_system/tenants/${u}`).once('value');
+            if (tSnap.exists() && u !== skipTenantUser) return "ዩዘርኔም (Username) በሌላ የሱቅ ባለቤት ተይዟል (ትይዟል)!";
+
+            let bSnap = await db.ref(`tirfe_system/buyers/${u}`).once('value');
+            if (bSnap.exists() && u !== skipBuyerUser) return "ዩዘርኔም በሌላ ደንበኛ (ገዥ) ተይዟል (ትይዟል)!";
+
+            let rSnap = await db.ref(`tirfe_system/revenueAuthorities/${u}`).once('value');
+            if (rSnap.exists() && u !== skipTenantUser) return "ይህ ዩዘርኔም በገቢዎች ባለስልጣን ተይዟል!";
+        } catch(e) {
+            console.warn("Firebase Read Error:", e);
+        }
+    }
+
     if (localDB.tenants) {
         for(let k in localDB.tenants) {
             let t = localDB.tenants[k];
@@ -126,7 +173,6 @@ function toggleUnifiedRegForm() {
     } else {
         document.getElementById('unifiedBuyerForm').classList.add('hidden');
         document.getElementById('unifiedTenantForm').classList.remove('hidden');
-        // የንግድ ዘርፎች በ dropdown እንዲጫኑ ጥሪ ማድረግ
         if (typeof populateAllBizTypeDropdowns === 'function') populateAllBizTypeDropdowns();
     }
 }
@@ -144,7 +190,6 @@ function autoFillPubCapitalFee() {
     if (contractType === 'በዓመት' && baseFee > 0) {
         baseFee = baseFee * 12;
     }
-
     if (baseFee > 0) {
         feeInput.value = baseFee;
     } else {
@@ -152,80 +197,123 @@ function autoFillPubCapitalFee() {
     }
 }
 
-function handleUnifiedLogin() {
+async function handleUnifiedLogin() {
     let user = document.getElementById('loginUnifiedUser').value.trim().toLowerCase();
     let email = document.getElementById('loginUnifiedEmail').value.trim();
     let pass = document.getElementById('loginUnifiedPass').value.trim();
     let err = document.getElementById('loginUnifiedError');
-
+    
     if(!user || !email || !pass) { 
         err.innerText = "❌ እባክዎ ዩዘርኔም፣ ኢሜል እና የይለፍ ቃል በትክክል ያስገቡ!";
         return; 
     }
 
-    if((user === "admin" || email === "apkcode1@gmail.com") && pass === "admin123") {
-        localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'admin', loginMode: 'admin', username: 'admin' }));
-        switchView('adminPage');
-        renderAdminPanel();
-        return;
-    }
+    // === የተስተካከለው አደገኛ የነበረው የአድሚን መግቢያ ሎጂክ ===
+    if(user === "admin" || email === "apkcode1@gmail.com") {
+        err.innerText = "🔄 የአድሚን መረጃ በማረጋገጥ ላይ...";
+        try {
+            const response = await fetch('/api/admin-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: pass })
+            });
+            const data = await response.json();
 
-    if(localDB.tenants && localDB.tenants[user]) {
-        let t = localDB.tenants[user];
-        if(t.gmail === email && String(t.password).trim() === pass) {
-            if(isTenantExpired(t, err)) return;
-            currentUserRole = "owner";
-            localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'owner', loginMode: 'merchant', username: user }));
-            launchApp(t);
+            if(data.success) {
+                localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'admin', loginMode: 'admin', username: 'admin' }));
+                switchView('adminPage');
+                renderAdminPanel();
+                return;
+            } else {
+                err.innerText = "❌ የተሳሳተ የአድሚን የይለፍ ቃል ወይም ኢሜል!";
+                return;
+            }
+        } catch (error) {
+            console.error("Admin Login Error: ", error);
+            err.innerText = "❌ ከሰርቨር ጋር መገናኘት አልተቻለም!";
             return;
         }
     }
+    // ===============================================
 
-    if(localDB.buyers && localDB.buyers[user]) {
-        let b = localDB.buyers[user];
-        if(b.email === email && String(b.password).trim() === pass) {
-            if(b.status === "blocked") { err.innerText = "❌ አካውንትዎ ታግዷል (Blocked)!";
-            return; }
-            currentBuyer = b;
-            localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'buyer', loginMode: 'buyer', username: user }));
-            switchView('buyerPage');
-            return;
+    err.innerText = "🔄 በማረጋገጥ ላይ...";
+    try {
+        let tSnap = await db.ref(`tirfe_system/tenants/${user}`).once('value');
+        if(tSnap.exists()) {
+            let t = tSnap.val();
+            if(t.gmail === email && String(t.password).trim() === pass) {
+                if(isTenantExpired(t, err)) return;
+                currentUserRole = "owner";
+                localDB.tenants[user] = t; 
+                localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'owner', loginMode: 'merchant', username: user }));
+                if(typeof setupSecureUserListeners === 'function') setupSecureUserListeners();
+                err.innerText = "";
+                launchApp(t);
+                return;
+            }
         }
-    }
-    
-    if(localDB.revenueAuthorities && localDB.revenueAuthorities[user]) {
-        let r = localDB.revenueAuthorities[user];
-        let rEmail = r.authEmail || r.email || r.gmail || ""; 
-        let rPass = String(r.authPass || r.password || r.pass || "").trim();
-        if(rEmail === email && rPass === pass) {
-            currentRevenueOfficer = r;
-            currentUserRole = "revenue";
-            localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'revenue', loginMode: 'revenue', username: user }));
-            switchView('revenuePage');
-            if(typeof renderRevenuePanel === "function") renderRevenuePanel();
-            return;
-        }
-    }
 
-    if(localDB.tenants) {
-        for(let tKey in localDB.tenants) {
-            let t = localDB.tenants[tKey];
-            if(t.staffAccounts) {
-                let found = t.staffAccounts.find(s => s.user === user && s.gmail === email && String(s.pass).trim() === pass);
-                if(found) {
-                    if (isTenantExpired(t, err)) return;
-                    currentUserRole = "staff";
-                    localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'staff', loginMode: 'staff', username: t.username }));
-                    launchApp(t);
-                    return;
+        let bSnap = await db.ref(`tirfe_system/buyers/${user}`).once('value');
+        if(bSnap.exists()) {
+            let b = bSnap.val();
+            if(b.email === email && String(b.password).trim() === pass) {
+                if(b.status === "blocked") { err.innerText = "❌ አካውንትዎ ታግዷል (Blocked)!";
+                    return; 
+                }
+                currentBuyer = b;
+                localDB.buyers[user] = b;
+                localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'buyer', loginMode: 'buyer', username: user }));
+                if(typeof setupSecureUserListeners === 'function') setupSecureUserListeners();
+                err.innerText = "";
+                switchView('buyerPage');
+                return;
+            }
+        }
+        
+        let rSnap = await db.ref(`tirfe_system/revenueAuthorities/${user}`).once('value');
+        if(rSnap.exists()) {
+            let r = rSnap.val();
+            let rEmail = r.authEmail || r.email || r.gmail || ""; 
+            let rPass = String(r.authPass || r.password || r.pass || "").trim();
+            if(rEmail === email && rPass === pass) {
+                currentRevenueOfficer = r;
+                currentUserRole = "revenue";
+                localDB.revenueAuthorities[user] = r;
+                localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'revenue', loginMode: 'revenue', username: user }));
+                if(typeof setupSecureUserListeners === 'function') setupSecureUserListeners();
+                err.innerText = "";
+                switchView('revenuePage');
+                if(typeof renderRevenuePanel === "function") renderRevenuePanel();
+                return;
+            }
+        }
+
+        if(localDB.tenants) {
+            for(let tKey in localDB.tenants) {
+                let t = localDB.tenants[tKey];
+                if(t.staffAccounts) {
+                    let found = t.staffAccounts.find(s => s.user === user && s.gmail === email && String(s.pass).trim() === pass);
+                    if(found) {
+                        if (isTenantExpired(t, err)) return;
+                        currentUserRole = "staff";
+                        localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'staff', loginMode: 'staff', username: t.username }));
+                        if(typeof setupSecureUserListeners === 'function') setupSecureUserListeners();
+                        err.innerText = "";
+                        launchApp(t);
+                        return;
+                    }
                 }
             }
         }
+
+        err.innerText = "❌ መረጃው ስህተት ነው! አካውንት አልተገኘም።";
+    } catch (error) {
+        console.error("Login Error: ", error);
+        err.innerText = "❌ ከሰርቨር ጋር መገናኘት አልተቻለም! ኢንተርኔትዎን ያረጋግጡ።";
     }
-    err.innerText = "❌ መረጃው ስህተት ነው! አካውንት አልተገኘም።";
 }
 
-function triggerUnifiedRegistration() {
+async function triggerUnifiedRegistration() {
     let role = document.getElementById('unifiedRegRole').value;
     if(role === 'buyer') {
         let name = document.getElementById('pubBuyerName').value.trim();
@@ -234,11 +322,11 @@ function triggerUnifiedRegistration() {
         let user = document.getElementById('pubBuyerUser').value.trim().toLowerCase();
 
         if(!name || !email || !phone || !user) { showCustomAlert("ስህተት", "እባክዎ መረጃዎን ሙሉ በሙሉ ይሙሉ!");
-        return; }
+            return; 
+        }
 
-        let takenMsg = isSystemDataTaken(user, phone, "", "");
-        if(takenMsg) { showCustomAlert("ስህተት", takenMsg);
-        return; }
+        let takenMsg = await isSystemDataTaken(user, phone, "", "");
+        if(takenMsg) { showCustomAlert("ስህተት", takenMsg); return; }
 
         pendingRegType = 'buyer';
         pendingRegistrationData = { name, email, phone, user };
@@ -249,7 +337,7 @@ function triggerUnifiedRegistration() {
                 { id: "newPass", label: "ለአካውንትዎ አዲስ የይለፍ ቃል ይፍጠሩ፦", type: "password", placeholder: "ሚስጥራዊ ፓስዎርድ" }
             ], (res) => {
                 if(!res.newPass) { showCustomAlert("ስህተት", "ፓስዎርድ አልፈጠሩም!"); return; }
-            
+    
                 if(!localDB.buyers) localDB.buyers = {};
                 localDB.buyers[pendingRegistrationData.user] = { 
                     username: pendingRegistrationData.user, phone: pendingRegistrationData.phone, 
@@ -280,7 +368,6 @@ function triggerUnifiedRegistration() {
         let mapsLink = document.getElementById('pub_newMapsLink').value.trim();
         let address = document.getElementById('pub_newAddress').value.trim();
         
-        // የንግድ ዘርፍ ማረጋገጫ (Dropdown selection check)
         let businessType = document.getElementById('pub_newBusinessType').value.trim();
         let capitalTier = document.getElementById('pub_newCapitalTier').value;
         let registrationFee = parseFloat(document.getElementById('pub_newRegistrationFee').value) || 0;
@@ -291,8 +378,7 @@ function triggerUnifiedRegistration() {
             showCustomAlert("ስህተት", "እባክዎ መሠረታዊ እና አስገዳጅ መረጃዎችን ሙሉ በሙሉ ያሟሉ!");
             return; 
         }
-
-        let checkUser = isSystemDataTaken(user, phone, "", "");
+        let checkUser = await isSystemDataTaken(user, phone, "", "");
         if (checkUser) { showCustomAlert("⚠️ ምዝገባው አልተሳካም", checkUser); return; }
 
         let fileInput = document.getElementById('pub_newShopLogoFile');
@@ -323,9 +409,10 @@ function triggerUnifiedRegistration() {
                     if (capitalTier === 'low') capitalTierAmh = "ዝቅተኛ (Low)";
                     else if (capitalTier === 'medium') capitalTierAmh = "መካከለኛ (Medium)";
                     else if (capitalTier === 'high') capitalTierAmh = "ከፍተኛ (High)";
+                    
                     let bankHint = (localDB.adminSettings && localDB.adminSettings.bankAccount) ? `\n\n🏦 የክፍያ ማረጋገጫ (ባንክ): ${localDB.adminSettings.bankAccount}` : "";
                     let tgMsg = `🔔 አዲስ ተከራይ በራሱ ተመዝግቧል!\n\n👤 የተከራይ ስም: ${fullName}\n🔑 ዩዘርኔም: ${user}\n📧 ኢሜል (Gmail): ${newEmail}\n📞 ስልክ: ${phone}\n💰 የካፒታል መጠን: ${capitalTierAmh}\n🏢 የንግድ ዘርፍ: ${businessType}${bankHint}`;
-                    sendAdminTelegramAlert(tgMsg);
+                    if(typeof sendAdminTelegramAlert === 'function') sendAdminTelegramAlert(tgMsg);
                     
                     let adminBankInfo = (localDB.adminSettings && localDB.adminSettings.bankAccount) ? localDB.adminSettings.bankAccount : "አልተሞላም";
                     let successMsg = `ሱቅዎ በተሳካ ሁኔታ ተመዝግቧል!\n\nእባክዎ ክፍያዎን በሚከተለው የባንክ ሂሳብ ቁጥር ይፈፅሙ፦\n🏦 ሂሳብ ቁጥር: ${adminBankInfo}\n💵 የሚከፈል መጠን: ${registrationFee} ETB\n\nክፍያው እንደተረጋገጠ አከራዩ አካውንትዎን ሙሉ በሙሉ ይከፍተዋል።`;
@@ -338,11 +425,11 @@ function triggerUnifiedRegistration() {
     }
 }
 
-function triggerForgotPassword() {
+async function triggerForgotPassword() {
     showFormModal("የይለፍ ቃል ማደሻ (Forgot Password)", [
         { id: "f_user", label: "የተጠቃሚ ስምዎን (Username) ያስገቡ፦", type: "text" },
         { id: "f_email", label: "የተመዘገቡበትን ኢሜል (Gmail) ያስገቡ፦", type: "email" }
-    ], (res) => {
+    ], async (res) => {
         let u = res.f_user.trim().toLowerCase();
         let e = res.f_email.trim();
         if(!u || !e) { showCustomAlert("ስህተት", "መረጃ አልሞሉም!"); return; }
@@ -350,11 +437,20 @@ function triggerForgotPassword() {
         let foundAccount = null;
         let accType = '';
         
-        if(localDB.tenants && localDB.tenants[u] && localDB.tenants[u].gmail === e) {
-            foundAccount = localDB.tenants[u]; accType = 'tenant';
-        } else if(localDB.buyers && localDB.buyers[u] && localDB.buyers[u].email === e) {
-            foundAccount = localDB.buyers[u]; accType = 'buyer';
-        }
+        try {
+            let tSnap = await db.ref(`tirfe_system/tenants/${u}`).once('value');
+            if(tSnap.exists() && tSnap.val().gmail === e) {
+                foundAccount = tSnap.val(); accType = 'tenant';
+                localDB.tenants[u] = foundAccount; 
+            } else {
+                let bSnap = await db.ref(`tirfe_system/buyers/${u}`).once('value');
+                if(bSnap.exists() && bSnap.val().email === e) {
+                    foundAccount = bSnap.val();
+                    accType = 'buyer';
+                    localDB.buyers[u] = foundAccount;
+                }
+            }
+        } catch(err) { console.log(err); }
 
         if(!foundAccount) { showCustomAlert("ስህተት", "በዚህ ዩዘርኔም እና ኢሜል የተመዘገበ አካውንት የለም!"); return; }
 
@@ -384,20 +480,20 @@ function triggerOTPFlow(emailAddress) {
     document.getElementById('emailVerifyModal').classList.remove('hidden');
     for(let i=1; i<=5; i++) document.getElementById('code'+i).value = '';
     document.getElementById('code1').focus();
-    setTimeout(() => { alert(`[ማሳሰቢያ]: ለሙከራ ጊዜያዊ የኢሜል ኮድዎ: ${emailVerificationCode} ነው!`); }, 500);
+    
+    sendSecureVerificationEmail(emailAddress, emailVerificationCode);
 }
 
 window.resendOTP = function() {
     let currentEmail = document.getElementById('verifyEmailDisplay').innerText;
     emailVerificationCode = Math.floor(10000 + Math.random() * 90000).toString();
-    showCustomAlert("✅ ተልኳል", "አዲስ ማረጋገጫ ኮድ ተልኳል።");
-    setTimeout(() => { alert(`[ማሳሰቢያ]: አዲሱ የኢሜል ኮድዎ: ${emailVerificationCode} ነው!`); }, 500);
+    sendSecureVerificationEmail(currentEmail, emailVerificationCode);
+    showCustomAlert("✅ ተልኳል", "አዲስ ማረጋገጫ ኮድ ወደ ኢሜልዎ ተልኳል።");
 };
 
 function verifyEmailCodeSubmit() {
     let enteredCode = "";
-    for(let i=1; i<=5; i++) { enteredCode += document.getElementById('code'+i).value;
-    }
+    for(let i=1; i<=5; i++) { enteredCode += document.getElementById('code'+i).value; }
     if (enteredCode === emailVerificationCode) {
         closeActiveModal();
         if(onVerifySuccess) onVerifySuccess();
@@ -418,24 +514,24 @@ window.openBuyerProfileSettings = function() {
         { id: "b_email", label: "ኢሜል (Gmail)", type: "email", defaultValue: currentBuyer.email || "" },
         { id: "b_phone", label: "ስልክ ቁጥር (Phone)", type: "tel", defaultValue: currentBuyer.phone },
         { id: "b_password", label: "የይለፍ ቃል (Password)", type: "text", defaultValue: currentBuyer.password }
-    ], (res) => {
+    ], async (res) => {
         let newU = res.b_username.trim().toLowerCase();
         let newP = res.b_phone.trim();
         
         if(newU !== currentBuyer.username || newP !== currentBuyer.phone) {
-            let takenMsg = isSystemDataTaken(newU, newP, "", currentBuyer.username);
+            let takenMsg = await isSystemDataTaken(newU, newP, "", currentBuyer.username);
             if(takenMsg) { showCustomAlert("ስህተት (Error)", takenMsg); return; }
         }
-     
+   
         let oldU = currentBuyer.username;
         currentBuyer.name = res.b_name.trim();
         currentBuyer.username = newU;
         currentBuyer.email = res.b_email.trim(); currentBuyer.phone = newP; currentBuyer.password = res.b_password.trim();
         if(oldU !== newU) {
-            localDB.buyers[newU] = currentBuyer; delete localDB.buyers[oldU];
+            localDB.buyers[newU] = currentBuyer;
+            delete localDB.buyers[oldU];
             localStorage.setItem('tirfe_active_session', JSON.stringify({ role: 'buyer', loginMode: 'buyer', username: newU }));
-        } else { localDB.buyers[newU] = currentBuyer;
-        }
+        } else { localDB.buyers[newU] = currentBuyer; }
         
         pushToFirebase(); renderBuyerCatalog();
         showCustomAlert("✅ ተሳክቷል", "ፕሮፋይልዎ በትክክል ተስተካክሏል!");
@@ -453,8 +549,7 @@ function isTenantExpired(tenant, errorElement) {
             errorElement.innerText = "🔒 የኪራይ ውልዎ ጊዜ አልቋል! እባክዎ ባለቤቱን ያነጋግሩ።"; return true;
         }
     }
-    if(tenant.status === "blocked") { errorElement.innerText = "🔒 አካውንትዎ ታግዷል!"; return true;
-    }
+    if(tenant.status === "blocked") { errorElement.innerText = "🔒 አካውንትዎ ታግዷል!"; return true; }
     return false;
 }
 
@@ -462,8 +557,7 @@ function checkMonthlyAccessReset() {
     if (!currentTenant || !currentTenant.data) return;
     let now = new Date(); let currentTimestamp = now.getTime();
     if (!currentTenant.data.lastMonthlyResetDate) {
-        currentTenant.data.lastMonthlyResetDate = currentTenant.codeCreatedAt ||
-        currentTimestamp;
+        currentTenant.data.lastMonthlyResetDate = currentTenant.codeCreatedAt || currentTimestamp;
         saveAndRefresh(); return;
     }
     
@@ -498,9 +592,7 @@ function checkMonthlyAccessReset() {
 }
 
 window.openDeliveryOrderModal = function(shopKey, itemIdx, itemName, price) {
-    if(!currentBuyer) { showCustomAlert("ማሳሰቢያ", "እባክዎ መጀመሪያ እንደ ገዥ ይግቡ/ይመዝገቡ!");
-    return;
-    }
+    if(!currentBuyer) { showCustomAlert("ማሳሰቢያ", "እባክዎ መጀመሪያ እንደ ገዥ ይግቡ/ይመዝገቡ!"); return; }
     
     showFormModal("🚚 " + itemName + " - ዴሊቨሪ ማዘዣ", [
         { id: "phone", label: "ስልክ ቁጥርዎ", type: "text", defaultValue: currentBuyer.phone },
@@ -529,7 +621,8 @@ window.openDeliveryOrderModal = function(shopKey, itemIdx, itemName, price) {
 
 window.buyFromShop = function(shopKey, itemIdx, itemName, price, availableRem) {
     if(!currentBuyer) { showCustomAlert("ማሳሰቢያ", "እባክዎ መጀመሪያ እንደ ገዥ ይግቡ/ይመዝገቡ!");
-    return; }
+        return; 
+    }
     
     showFormModal("🛒 " + itemName + " - ወደ ቅርጫት (Cart) ማስገቢያ", [
         { id: "qty", label: "የሚፈልጉት ብዛት", type: "number", defaultValue: "1" }
@@ -577,9 +670,11 @@ window.renderBuyerCart = function() {
             <td><button class="btn-expense btn-sm" onclick="removeFromBuyerCart(${i})">❌ አጥፋ</button></td>
         </tr>`;
     });
+    
     let vatRate = (localDB.adminSettings && localDB.adminSettings.vatRate) ? parseFloat(localDB.adminSettings.vatRate) : 0;
     let vatAmount = (grandTotal * vatRate) / 100;
     let finalTotal = grandTotal + vatAmount;
+    
     if (cartTotalBar) {
         if (vatRate > 0) {
             cartTotalBar.innerHTML = `
@@ -594,9 +689,9 @@ window.renderBuyerCart = function() {
 };
 
 window.removeFromBuyerCart = function(i) { if(window.buyerCartData) { window.buyerCartData.splice(i, 1); renderBuyerCart(); } };
+
 window.checkoutBuyerCart = function() {
-    if(!window.buyerCartData || window.buyerCartData.length === 0) { showCustomAlert("ስህተት", "ምንም ዕቃ አልመረጡም!"); return;
-    }
+    if(!window.buyerCartData || window.buyerCartData.length === 0) { showCustomAlert("ስህተት", "ምንም ዕቃ አልመረጡም!"); return; }
     
     showCustomConfirm("ትዕዛዝ ማረጋገጫ", "ሁሉንም የቅርጫት ትዕዛዞች ወደየሱቆቹ መላክ ይፈልጋሉ?", () => {
         let shops = {};
@@ -623,7 +718,7 @@ window.checkoutBuyerCart = function() {
     });
 };
 
-function renderBuyerCatalog() {
+async function renderBuyerCatalog() {
     if(currentBuyer) {
         let badge = document.getElementById('buyerProfileBadge');
         if(badge) badge.innerText = `👤 የተጠቃሚ ስም: ${currentBuyer.username} | 📱 ስልክ: ${currentBuyer.phone}`;
@@ -633,13 +728,28 @@ function renderBuyerCatalog() {
     let container = document.getElementById('buyerShopsContainer');
     if(!container) return;
     
+    if (typeof db !== 'undefined' && (!localDB.tenants || Object.keys(localDB.tenants).length === 0)) {
+        try {
+            let snap = await db.ref('tirfe_system/tenants').once('value');
+            if(snap.exists()) {
+                let allT = snap.val();
+                for(let k in allT) { 
+                    delete allT[k].password;
+                    delete allT[k].activationCode; 
+                    delete allT[k].staffAccounts; delete allT[k].telegramToken; 
+                    delete allT[k].bankAccount; 
+                }
+                localDB.tenants = allT;
+            }
+        } catch(e) { console.warn("Catalog fetch error:", e); }
+    }
+
     container.innerHTML = '';
     let hasData = false;
     let query = document.getElementById('buyerSearchInput') ? document.getElementById('buyerSearchInput').value.trim().toLowerCase() : "";
     let categories = new Set();
     
-    if (localDB.tenants) { Object.values(localDB.tenants).forEach(t => { if (t.status === "active") { categories.add(t.businessType || "አጠቃላይ ንግድ"); } });
-    }
+    if (localDB.tenants) { Object.values(localDB.tenants).forEach(t => { if (t.status === "active") { categories.add(t.businessType || "አጠቃላይ ንግድ"); } }); }
     
     let catContainer = document.getElementById('buyerCategoryContainer');
     if (catContainer) {
@@ -666,38 +776,63 @@ function renderBuyerCatalog() {
     }
 
     if (localDB.tenants) {
-        Object.keys(localDB.tenants).forEach(tKey => {
+        let tenantKeys = Object.keys(localDB.tenants);
+        
+        // ሱቆችን በዘፈቀደ (Shuffle) ለማምጣት - ካፒታል በቀላሉ እንዳይገመት ያደርጋል
+        for (let i = tenantKeys.length - 1; i > 0; i--) {
+            let j = Math.floor(Math.random() * (i + 1));
+            [tenantKeys[i], tenantKeys[j]] = [tenantKeys[j], tenantKeys[i]];
+        }
+
+        tenantKeys.forEach(tKey => {
             let t = localDB.tenants[tKey];
             if (t.status === "active") {
                 let tBType = t.businessType || "አጠቃላይ ንግድ";
                 if (activeCategoryFilter !== "all" && tBType !== activeCategoryFilter) return;
-       
+
+                let isShopMatch = false;
+                if (query !== "") {
+                    let uName = t.username ? t.username.toLowerCase() : tKey.toLowerCase();
+                    isShopMatch = (uName === query || uName.includes(query)) ||
+                                  (t.shopName && t.shopName.toLowerCase().includes(query)) ||
+                                  (t.phone && t.phone.includes(query));
+                }
+
                 let matchingItems = [];
                 if (t.data && t.data.inventory) {
                     matchingItems = t.data.inventory.map((item, index) => ({...item, originalIdx: index})).filter(item => {
                         if (query === "") return true;
+                        if (isShopMatch) return true;
                         return item.name.toLowerCase().includes(query) || (item.model && item.model.toLowerCase().includes(query));
                     });
+
+                    // በእያንዳንዱ ሱቅ ውስጥ ያሉትን ዕቃዎች በዘፈቀደ (Shuffle) ለማምጣት
+                    for (let i = matchingItems.length - 1; i > 0; i--) {
+                        let j = Math.floor(Math.random() * (i + 1));
+                        [matchingItems[i], matchingItems[j]] = [matchingItems[j], matchingItems[i]];
+                    }
                 }
-                if (query !== "" && matchingItems.length === 0) return;
-           
+                
+                if (query !== "" && !isShopMatch && matchingItems.length === 0) return;
                 hasData = true;
                 let shopLogo = t.shopLogo || "https://cdn-icons-png.flaticon.com/512/869/869636.png";
                 let tgLink = t.telegram && t.telegram !== "-" ? (t.telegram.startsWith('@') ? t.telegram.substring(1) : t.telegram) : "";
+                
                 let shopCardHTML = `
                 <div class="shop-card">
                     <div class="shop-card-header">
                         <img src="${shopLogo}" class="shop-avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/869/869636.png'">
                         <div class="shop-meta">
-                             <h3>${t.shopName}</h3>
+                            <h3>${t.shopName}</h3>
                             <p>📍 አድራሻ፡ ${t.address || 'ያልተገለጸ'} <br><span style="color:var(--accent-color); font-size:0.75rem;">[${tBType}]</span></p>
                         </div>
                     </div>
                     <div style="margin-top:5px; font-size:0.85rem; color:#94a3b8; font-weight:bold;">📦 ዕቃዎች ዝርዝር፦</div>
                     <div class="shop-items-list">`;
-                if (matchingItems.length === 0) { shopCardHTML += `<p style="font-size:0.8rem; color:#64748b; padding:5px 0;">በአሁኑ ሰዓት የተመዘገበ ዕቃ የለም።</p>`;
-                } 
-                else {
+                    
+                if (matchingItems.length === 0) { 
+                    shopCardHTML += `<p style="font-size:0.8rem; color:#64748b; padding:5px 0;">በአሁኑ ሰዓት የተመዘገበ ዕቃ የለም።</p>`;
+                } else {
                     matchingItems.forEach(item => {
                         let itemImg = item.imgUrl || "https://cdn-icons-png.flaticon.com/512/3342/3342137.png";
                         let modelDisplay = item.model && item.model !== "-" ? `<br><small style="color:var(--accent-color)">ሞዴል: ${item.model}</small>` : '';
@@ -731,13 +866,13 @@ function renderBuyerCatalog() {
                 container.innerHTML += shopCardHTML;
 
                 if(liveBuyer && t.data && t.data.deliveryOrders) {
-                    t.data.deliveryOrders.forEach(ord => {
+                     t.data.deliveryOrders.forEach(ord => {
                         if(ord.buyerUser === liveBuyer.username) {
                             let st = ord.status;
                             let badge = st === "pending" ? "በመጠባበቅ ላይ" : (st === "accepted" ? "በመንገድ ላይ" : (st === "completed" ? "ተረክበዋል" : "ተመልሷል"));
                             let cl = st === "pending" ? "text-warning" : (st === "accepted" ? "text-success" : "text-danger");
                             myOrdersHTML += `<tr>
-                                <td>${t.shopName}</td><td>${ord.itemName} (x${ord.qty})</td>
+                                 <td>${t.shopName}</td><td>${ord.itemName} (x${ord.qty})</td>
                                 <td>${ord.total} ETB</td><td>${ord.date}</td>
                                 <td class="${cl}"><b>${badge}</b></td>
                             </tr>`;
@@ -748,8 +883,7 @@ function renderBuyerCatalog() {
         });
     }
 
-    if(!hasData) { container.innerHTML = '<p style="text-align:center; color:#94a3b8; grid-column: 1/-1; padding:20px;">በተፈለገው ስም የተገኘ ምንም ሱቅ ወይም ዕቃ የለም።</p>';
-    }
+    if(!hasData) { container.innerHTML = '<p style="text-align:center; color:#94a3b8; grid-column: 1/-1; padding:20px;">በተፈለገው ስም የተገኘ ምንም ሱቅ ወይም ዕቃ የለም።</p>'; }
     
     let ordersBody = document.getElementById('buyerOrdersBody');
     if(ordersBody) {
@@ -778,8 +912,7 @@ window.viewBuyerReceipt = function(recId) {
     let vAmt = rec.vatAmount !== undefined ? rec.vatAmount : 0;
     if(rec.advancedItems) { 
         generateAdvancedReceipt(rec.advancedItems, subT, rec.seller, rec.recId, false, rec.shopName, rec.bType, bName, bPhone, vAmt, rec.ownerName, rec.ownerPhone);
-    } 
-    else { 
+    } else { 
         generateAdvancedReceipt([{name: rec.itemName, count: rec.count, unitPrice: subT/rec.count, total: subT}], subT, rec.seller, rec.recId, false, rec.shopName, rec.bType, bName, bPhone, vAmt, rec.ownerName, rec.ownerPhone);
     }
 };
@@ -792,8 +925,7 @@ window.openStaffManagement = function() {
         }
     }
     tempStaffForms = JSON.parse(JSON.stringify(currentTenant.staffAccounts));
-    if(tempStaffForms.length === 0) { tempStaffForms.push({ name: "", gmail: "", phone: "", user: "", pass: "" });
-    }
+    if(tempStaffForms.length === 0) { tempStaffForms.push({ name: "", gmail: "", phone: "", user: "", pass: "" }); }
     
     renderStaffForms(); openModalContainer();
     document.querySelectorAll('.modal-card').forEach(m => m.classList.add('hidden'));
@@ -801,8 +933,7 @@ window.openStaffManagement = function() {
 };
 
 window.addStaffFormRow = function() {
-    if(tempStaffForms.length >= 3) { showCustomAlert("ማሳሰቢያ", "ከ 3 ሰራተኛ በላይ በአንድ ጊዜ መመዝገብ አይቻልም!");
-    return; }
+    if(tempStaffForms.length >= 3) { showCustomAlert("ማሳሰቢያ", "ከ 3 ሰራተኛ በላይ በአንድ ጊዜ መመዝገብ አይቻልም!"); return; }
     tempStaffForms.push({ name: "", gmail: "", phone: "", user: "", pass: "" }); renderStaffForms();
 };
 
@@ -826,7 +957,7 @@ window.renderStaffForms = function() {
     });
 };
 
-window.saveAllStaff = function() {
+window.saveAllStaff = async function() {
     for(let i=0; i<tempStaffForms.length; i++) {
         tempStaffForms[i].name = document.getElementById(`s_name_${i}`).value.trim();
         tempStaffForms[i].gmail = document.getElementById(`s_gmail_${i}`).value.trim();
@@ -837,15 +968,12 @@ window.saveAllStaff = function() {
             showCustomAlert("ስህተት", `እባክዎ ለሰራተኛ ${i+1} አስፈላጊ መረጃዎችን ይሙሉ!`);
             return;
         }
-
-        let takenMsg = isSystemDataTaken(tempStaffForms[i].user, tempStaffForms[i].phone, currentTenant.username, "");
+        let takenMsg = await isSystemDataTaken(tempStaffForms[i].user, tempStaffForms[i].phone, currentTenant.username, "");
         if (takenMsg) { showCustomAlert("ስህተት", `ሰራተኛ ${i+1}: ${takenMsg}`); return; }
 
         for(let j=0; j<i; j++) {
-            if(tempStaffForms[j].user === tempStaffForms[i].user) { showCustomAlert("ስህተት", "ዩዘርኔም በፎርሙ ውስጥ ተደግሟል!");
-            return; }
-            if(tempStaffForms[j].phone === tempStaffForms[i].phone) { showCustomAlert("ስህተት", "ስልክ ቁጥር በፎርሙ ውስጥ ተደግሟል!");
-            return; }
+            if(tempStaffForms[j].user === tempStaffForms[i].user) { showCustomAlert("ስህተት", "ዩዘርኔም በፎርሙ ውስጥ ተደግሟል!"); return; }
+            if(tempStaffForms[j].phone === tempStaffForms[i].phone) { showCustomAlert("ስህተት", "ስልክ ቁጥር በፎርሙ ውስጥ ተደግሟል!"); return; }
         }
     }
     currentTenant.staffAccounts = tempStaffForms;
@@ -854,15 +982,13 @@ window.saveAllStaff = function() {
 };
 
 function configureBank() {
-    if(currentUserRole === "staff") { showCustomAlert("🏦 የባንክ ሂሳብ መረጃ", `የአሰሪው የባንክ ሂሳብ ቁጥር (CBE/Telebirr)፦ ${currentTenant.bankAccount || "ያልተገናኘ"}`);
-    return; }
+    if(currentUserRole === "staff") { showCustomAlert("🏦 የባንክ ሂሳብ መረጃ", `የአሰሪው የባንክ ሂሳብ ቁጥር (CBE/Telebirr)፦ ${currentTenant.bankAccount || "ያልተገናኘ"}`); return; }
     
     showFormModal("🏦 የባንክ እና የቴሌግራም አገናኝ መቼት", [
         { id: "telegramToken", label: "የቴሌግራም ቦት ቶከን (Telegram Bot Token)", type: "text", placeholder: "Token...", defaultValue: currentTenant.telegramToken || "" },
         { id: "telegramChatId", label: "የቴሌግራም ቻት ID (Telegram Chat ID)", type: "text", placeholder: "Chat ID...", defaultValue: currentTenant.telegramChatId || "" },
         { id: "bankAccountNumber", label: "የባንክ ሂሳብ ቁጥር (CBE/Telebirr)", type: "text", placeholder: "የባንክ ቁጥር...", defaultValue: currentTenant.bankAccount || "" }
-    ], (res) => 
-    {
+    ], (res) => {
         currentTenant.telegramToken = res.telegramToken.trim(); currentTenant.telegramChatId = res.telegramChatId.trim(); currentTenant.bankAccount = res.bankAccountNumber.trim();
         saveAndRefresh(); showCustomAlert("ተሳክቷል", "የማያያዣ መቼቶች በተሳካ ሁኔታ ተቀምጠዋል!");
     });
